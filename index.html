@@ -27,7 +27,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font
 img{max-width:100%}
 .wrap{max-width:1200px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 button,input,select,textarea{font:inherit;color:inherit}
-:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+:focus-visible{outline:2px solid var(--y);outline-offset:3px}
 
 /* ---------- header */
 .top{border-bottom:1px solid var(--line);background:rgba(11,11,13,.9)}
@@ -42,7 +42,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .games{display:flex;flex-wrap:wrap;gap:4px}
 .games button{border:0;background:transparent;color:var(--muted);padding:8px 14px;cursor:pointer;position:relative;
   font-family:var(--display);font-weight:600;font-size:14px;letter-spacing:.14em;text-transform:uppercase;transition:color .15s}
-.games button::after{content:"";position:absolute;left:14px;right:14px;bottom:0;height:2px;background:var(--ink);transform:scaleX(0);transition:transform .2s ease}
+.games button::after{content:"";position:absolute;left:14px;right:14px;bottom:0;height:2px;background:var(--y);transform:scaleX(0);transition:transform .2s ease}
 .games button:hover{color:var(--ink)}
 .games button[aria-pressed="true"]{color:var(--ink)}
 .games button[aria-pressed="true"]::after{transform:scaleX(1)}
@@ -50,10 +50,11 @@ button,input,select,textarea{font:inherit;color:inherit}
 /* ---------- main */
 main{padding-block:40px 72px}
 .head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:26px}
-.eyebrow{font-family:var(--display);font-weight:600;font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+.eyebrow{font-family:var(--display);font-weight:600;font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:var(--y);margin:0 0 6px}
 .head h2{margin:0;font-family:var(--display);font-weight:800;font-size:46px;line-height:1;text-transform:uppercase;letter-spacing:.02em}
 .record{margin:10px 0 0;display:flex;flex-wrap:wrap;align-items:baseline;gap:10px;font-family:var(--display);font-weight:500;font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
 .record b{font-weight:700;font-size:22px;letter-spacing:.04em;color:var(--ink);font-variant-numeric:tabular-nums}
+.record b .w{color:var(--y)}
 
 /* chamfered buttons: white primary, dark secondary */
 .btn{border:0;padding:12px 24px;cursor:pointer;background:var(--ink);color:var(--on-light);
@@ -78,7 +79,7 @@ main{padding-block:40px 72px}
 .match::before{content:"";position:absolute;inset:0;pointer-events:none;border:1px solid var(--line);transition:border-color .15s}
 .match.can-edit{cursor:pointer}
 .match.can-edit:hover{transform:translateY(-3px)}
-.match.can-edit:hover::before{border-color:var(--line-2)}
+.match.can-edit:hover::before{border-color:rgba(245,196,0,.55)}
 .meta{display:flex;align-items:center;gap:10px;padding:15px 18px 0;font-size:12px;color:var(--muted);min-width:0}
 .gamepill{flex:none;font-family:var(--display);font-weight:700;font-size:11px;letter-spacing:.16em;text-transform:uppercase;padding:3px 8px;border:1px solid var(--line-2);color:var(--ink)}
 .meta .event{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--display);font-weight:500;letter-spacing:.12em;text-transform:uppercase}
@@ -114,6 +115,7 @@ main{padding-block:40px 72px}
 .vsrow{position:relative;width:100%;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:end;gap:10px;padding:14px 18px;color:var(--ink)}
 .vsrow .c{font-family:var(--display);font-weight:800;font-size:20px;line-height:1.05;text-transform:uppercase;letter-spacing:.04em;overflow-wrap:anywhere}
 .vsrow .c.r{text-align:right}
+.vsrow .c:first-child small{color:var(--y)}
 .vsrow .c small{display:block;font-family:var(--display);font-weight:500;font-size:10px;letter-spacing:.24em;color:rgba(243,243,241,.65);margin-bottom:4px}
 .vsrow .vs{font-family:var(--display);font-weight:700;font-size:11px;letter-spacing:.2em;color:var(--ink);border:1px solid rgba(255,255,255,.5);padding:3px 7px 3px 9px}
 
@@ -144,7 +146,7 @@ dialog::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(3px)}
 .field > span{font-family:var(--display);font-weight:600;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
 .field small{font-size:12px;color:var(--muted)}
 .field input,.field select{border:1px solid var(--line);background:var(--bg);padding:10px 11px;min-width:0;width:100%;border-radius:0;transition:border-color .15s}
-.field input:focus,.field select:focus{outline:none;border-color:var(--ink)}
+.field input:focus,.field select:focus{outline:none;border-color:var(--y)}
 .scorein{display:flex;align-items:center;gap:12px}
 .scorein input{width:5.5rem;text-align:center;font-family:var(--display);font-weight:800;font-size:28px;padding:4px}
 .scorein b{font-family:var(--display);font-size:24px;color:var(--dim)}
@@ -334,7 +336,7 @@ dialog::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(3px)}
 
     const W = src.filter(m=>resultOf(m)==="W").length, L = src.filter(m=>resultOf(m)==="L").length;
     $("#record").innerHTML = src.length
-      ? `<span>${esc(filter || "All games")}</span><b>${W}–${L}</b><span>Record</span>`
+      ? `<span>${esc(filter || "All games")}</span><b><span class="w">${W}</span>–${L}</b><span>Record</span>`
       : `<span>${esc(filter || "All games")}</span>`;
 
     const grid = $("#grid");
