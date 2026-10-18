@@ -192,7 +192,7 @@ dialog::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(3px)}
       <h2>Recent</h2>
       <p class="record" id="record">Loading results…</p>
     </div>
-    <button class="btn" type="button" id="addBtn" hidden>+ Add match</button>
+    <button class="btn" type="button" id="addBtn">+ Add match</button>
   </div>
   <div class="note" id="exampleNote" hidden><b>Example matches.</b> No results have been posted yet. These samples show what match cards look like.</div>
   <div class="grid" id="grid"></div>
@@ -202,10 +202,7 @@ dialog::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(3px)}
 <footer>
   <div class="wrap">
     <span class="brand">Cedar Grove <span>Esports</span></span>
-    <span>
-      <button class="linkbtn" type="button" id="loginBtn">Team sign-in</button>
-      <button class="linkbtn" type="button" id="logoutBtn" hidden>Sign out</button>
-    </span>
+    <span>Cedar Grove High School</span>
   </div>
 </footer>
 
@@ -248,26 +245,7 @@ dialog::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(3px)}
   </form>
 </dialog>
 
-<!-- team sign-in -->
-<dialog id="loginDlg">
-  <form class="dlg" id="loginForm" autocomplete="off">
-    <h3>Team sign-in</h3>
-    <p>Team members post results by saving them to the site's GitHub repository. You need a GitHub access key with permission to edit it.</p>
-    <ol>
-      <li>Open <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">GitHub → new fine-grained token</a>.</li>
-      <li>Under <b>Repository access</b>, pick only <b>CedarGroveEsportsStats</b>.</li>
-      <li>Under <b>Permissions → Contents</b>, choose <b>Read and write</b>. Generate it and paste it below.</li>
-    </ol>
-    <label class="field full"><span>Access key</span><input id="fToken" type="password" placeholder="github_pat_…" required></label>
-    <p>The key stays in this browser only. Sign out on shared computers.</p>
-    <div class="err" id="loginErr" role="alert"></div>
-    <div class="dlg-actions">
-      <span class="spacer"></span>
-      <button class="btn ghost" type="button" id="loginCancel">Cancel</button>
-      <button class="btn" type="submit" id="loginSubmit">Sign in</button>
-    </div>
-  </form>
-</dialog>
+
 
 <datalist id="oppList"></datalist><datalist id="eventList"></datalist><datalist id="playerList"></datalist><datalist id="charList"></datalist>
 
@@ -276,10 +254,9 @@ dialog::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(3px)}
   const $ = s => document.querySelector(s);
   const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
-  // Where results live. Everyone reads matches.json; signed-in team members write it through the GitHub API.
-  const REPO = "Kerem-Orhan/CedarGroveEsportsStats", BRANCH = "main", FILE = "matches.json";
-  const API = `https://api.github.com/repos/${REPO}/contents/${FILE}`;
-  const TOKEN_KEY = "cg-token", TAB_KEY = "cg-tab";
+  // Match results live in a Cloudflare database behind this API (source in api/).
+  const API = "https://cedargrove-esports-api.playex.workers.dev/matches";
+  const TAB_KEY = "cg-tab";
   const PAGE = 12;
 
   const GAMES = {
@@ -290,7 +267,7 @@ dialog::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(3px)}
   };
   const gameInfo = g => GAMES[g] || {cls:"smash", chars:[]};
 
-  // Shown only while matches.json is empty. Never saved.
+  // Shown only while there are no real matches. Never saved.
   const EXAMPLES = [
     {id:"ex1",game:"Smash Bros",date:"2026-10-14",opponent:"Westfield High",event:"PlayVS Week 4",us:2,them:3,player:"Kerem",char:"Fox",oppPlayer:"Blaze",oppChar:"Marth"},
     {id:"ex2",game:"Street Fighter",date:"2026-10-12",opponent:"Lakeview Academy",event:"Scrim",us:3,them:1,player:"Dani",char:"Ken",oppPlayer:"Vex",oppChar:"Juri"},
@@ -298,20 +275,12 @@ dialog::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(3px)}
   ];
 
   let matches = [], loaded = false, filter = "", shown = PAGE, editingId = null;
-  let token = null, sha = null;
 
   const resultOf = m => m.us > m.them ? "W" : m.us < m.them ? "L" : "D";
   const byDate = (a,b) => (b.date||"").localeCompare(a.date||"") || (b.createdAt||0) - (a.createdAt||0);
   const fmtDate = d => { if(!d) return ""; const t = new Date(d+"T12:00:00"); return isNaN(t) ? d : t.toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"}); };
   const today = () => { const d = new Date(); return new Date(d - d.getTimezoneOffset()*60000).toISOString().slice(0,10); };
   const safeUrl = u => /^https:\/\/[^\s"'<>()]+$/i.test(u||"") ? u : "";
-  const str = (v,n) => String(v ?? "").slice(0,n);
-  function clean(m){
-    return {id:str(m.id,40), game:str(m.game,40), date:str(m.date,10), opponent:str(m.opponent,60), event:str(m.event,60),
-      us:Math.max(0,parseInt(m.us,10)||0), them:Math.max(0,parseInt(m.them,10)||0),
-      player:str(m.player,40), char:str(m.char,40), oppPlayer:str(m.oppPlayer,40), oppChar:str(m.oppChar,40),
-      image:safeUrl(m.image), createdAt:+m.createdAt||0};
-  }
 
   let toastTimer;
   function toast(msg, bad){
@@ -320,44 +289,15 @@ dialog::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(3px)}
     clearTimeout(toastTimer); toastTimer = setTimeout(() => t.hidden = true, 3500);
   }
 
-  // ---------- GitHub storage
-  const b64encode = s => { const bytes = new TextEncoder().encode(s); let bin = ""; for (const b of bytes) bin += String.fromCharCode(b); return btoa(bin); };
-  const b64decode = s => new TextDecoder().decode(Uint8Array.from(atob(s.replace(/\s/g,"")), c => c.charCodeAt(0)));
-  const ghHeaders = () => ({"Accept":"application/vnd.github+json","Authorization":"Bearer "+token,"X-GitHub-Api-Version":"2022-11-28"});
-
-  async function readPublic(){
-    const r = await fetch(`${FILE}?t=${Date.now()}`, {cache:"no-store"});
-    if (r.status === 404) return [];
-    if (!r.ok) throw new Error("read");
-    const data = await r.json();
-    return Array.isArray(data) ? data : [];
-  }
-  async function readGitHub(){
-    const r = await fetch(`${API}?ref=${BRANCH}&t=${Date.now()}`, {headers:ghHeaders(), cache:"no-store"});
-    if (r.status === 404){ sha = null; return []; }
-    if (r.status === 401 || r.status === 403) throw new Error("auth");
-    if (!r.ok) throw new Error("read");
-    const j = await r.json(); sha = j.sha;
-    const data = JSON.parse(b64decode(j.content) || "[]");
-    return Array.isArray(data) ? data : [];
-  }
-  async function writeGitHub(next, message){
-    const body = {message, branch:BRANCH, content:b64encode(JSON.stringify(next.slice().sort(byDate), null, 2) + "\n")};
-    if (sha) body.sha = sha;
-    const r = await fetch(API, {method:"PUT", headers:{...ghHeaders(),"Content-Type":"application/json"}, body:JSON.stringify(body)});
-    if (r.status === 409 || r.status === 422) throw new Error("conflict");
-    if (r.status === 401 || r.status === 403 || r.status === 404) throw new Error("auth");
-    if (!r.ok) throw new Error("write");
-    const j = await r.json(); sha = j.content.sha;
-  }
-  // Re-read the latest file, apply the change, write it back. Retries once if someone else saved in between.
-  async function commit(change, message){
-    for (let attempt = 0; attempt < 2; attempt++){
-      const latest = (await readGitHub()).map(clean);
-      const next = change(latest);
-      try{ await writeGitHub(next, message); matches = next; return; }
-      catch(e){ if (e.message !== "conflict" || attempt) throw e; }
-    }
+  // ---------- API
+  async function api(path, method, body){
+    let r;
+    try{
+      r = await fetch(API + path, {method: method || "GET", headers: body ? {"Content-Type":"application/json"} : undefined, body: body ? JSON.stringify(body) : undefined, cache:"no-store"});
+    }catch(e){ throw new Error("Couldn't reach the server. Check your connection and try again."); }
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(data.error || "Something went wrong. Try again.");
+    return data;
   }
 
   // ---------- render
@@ -365,8 +305,7 @@ dialog::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(3px)}
     const g = gameInfo(m.game), r = resultOf(m);
     const img = safeUrl(m.image);
     const label = r==="W" ? "Win" : r==="L" ? "Loss" : "Draw";
-    const tag = token ? "button" : "article";
-    return `<${tag} ${token?'type="button" ':""}class="match${token?" can-edit":""}" data-id="${esc(m.id)}" aria-label="${esc(label)} against ${esc(m.opponent)}, ${m.us} to ${m.them}${token?". Open to edit":""}">
+    return `<button type="button" class="match can-edit" data-id="${esc(m.id)}" aria-label="${esc(label)} against ${esc(m.opponent)}, ${m.us} to ${m.them}. Open to edit.">
       <div class="meta"><span class="gamepill ${g.cls}">${esc(m.game)}</span><span class="event">${esc(m.event||"")}</span><span class="date">${esc(fmtDate(m.date))}</span></div>
       <div class="scoreline">
         <div class="team us"><div class="name">Cedar Grove</div>${m.player?`<div class="player">${esc(m.player)}</div>`:""}</div>
@@ -384,7 +323,7 @@ dialog::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(3px)}
           <div class="c r"><small>${esc(m.opponent)}</small>${esc(m.oppChar||"—")}</div>
         </div>
       </div>
-    </${tag}>`;
+    </button>`;
   }
 
   function render(){
@@ -392,11 +331,10 @@ dialog::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(3px)}
     const examples = matches.length === 0;
     const src = (examples ? EXAMPLES : matches).filter(m => !filter || m.game === filter).sort(byDate);
     $("#exampleNote").hidden = !examples;
-    $("#addBtn").hidden = !token;
 
     const W = src.filter(m=>resultOf(m)==="W").length, L = src.filter(m=>resultOf(m)==="L").length;
     $("#record").innerHTML = src.length
-      ? `<span>${esc(filter || "All games")}</span><b><span class="w">${W}</span>–${L}</b><span>Record</span>`
+      ? `<span>${esc(filter || "All games")}</span><b>${W}–${L}</b><span>Record</span>`
       : `<span>${esc(filter || "All games")}</span>`;
 
     const grid = $("#grid");
@@ -458,18 +396,11 @@ dialog::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(3px)}
   dlg.addEventListener("click", e => { if (e.target === dlg) dlg.close(); });
 
   $("#grid").addEventListener("click", e => {
-    if (!token) return;
     const c = e.target.closest(".match"); if (!c) return;
     const id = c.dataset.id;
     if (id.startsWith("ex")) return openDialog(null);
     const m = matches.find(x=>x.id===id); if (m) openDialog(m);
   });
-
-  function saveError(e){
-    return e.message === "auth" ? "GitHub refused the save. Your access key may be expired or missing write access. Sign out and sign in again."
-         : e.message === "conflict" ? "Someone else saved at the same moment. Try again."
-         : "Couldn't reach GitHub. Check your connection and try again.";
-  }
 
   $("#form").addEventListener("submit", async e => {
     e.preventDefault();
@@ -478,21 +409,18 @@ dialog::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(3px)}
     if (!opp){ $("#err").textContent = "Add the opponent's name."; return; }
     if (!Number.isFinite(us) || !Number.isFinite(them) || us < 0 || them < 0){ $("#err").textContent = "Enter both scores as whole numbers."; return; }
     if (img && !safeUrl(img)){ $("#err").textContent = "The picture link must start with https://"; return; }
-    const prev = editingId && matches.find(m=>m.id===editingId);
-    const rec = clean({
-      id: editingId || "m" + Date.now().toString(36) + Math.random().toString(36).slice(2,6),
+    const rec = {
       game: $("#fGame").value, date: $("#fDate").value || today(), opponent: opp, event: $("#fEvent").value.trim(),
       us, them, player: $("#fPlayer").value.trim(), char: $("#fChar").value.trim(),
-      oppPlayer: $("#fOppPlayer").value.trim(), oppChar: $("#fOppChar").value.trim(),
-      image: img, createdAt: prev?.createdAt || Date.now(),
-    });
+      oppPlayer: $("#fOppPlayer").value.trim(), oppChar: $("#fOppChar").value.trim(), image: img,
+    };
     const id = editingId;
     $("#saveBtn").disabled = true; $("#saveBtn").textContent = "Saving…"; $("#err").textContent = "";
     try{
-      await commit(list => id ? list.map(m => m.id===id ? rec : m) : [...list, rec],
-        `${id?"Update":"Add"} ${rec.game} match vs ${rec.opponent} (${rec.us}-${rec.them})`);
+      const saved = await api(id ? "/" + encodeURIComponent(id) : "", id ? "PUT" : "POST", rec);
+      matches = id ? matches.map(m => m.id === id ? saved : m) : [...matches, saved];
       dlg.close(); render(); toast(id ? "Match updated" : "Match posted");
-    }catch(err){ $("#err").textContent = saveError(err); }
+    }catch(err){ $("#err").textContent = err.message; }
     finally{ $("#saveBtn").disabled = false; $("#saveBtn").textContent = "Save"; }
   });
 
@@ -502,58 +430,23 @@ dialog::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(3px)}
     const b = $("#delBtn");
     if (!b.classList.contains("armed")){ b.classList.add("armed"); b.textContent = "Click again to delete"; armTimer = setTimeout(disarm, 4000); return; }
     clearTimeout(armTimer);
-    const id = editingId, m = matches.find(x=>x.id===id);
+    const id = editingId;
     b.disabled = true; b.textContent = "Deleting…";
     try{
-      await commit(list => list.filter(x => x.id !== id), `Delete match vs ${m?.opponent || "opponent"}`);
+      await api("/" + encodeURIComponent(id), "DELETE");
+      matches = matches.filter(x => x.id !== id);
       dlg.close(); render(); toast("Match deleted");
-    }catch(err){ $("#err").textContent = saveError(err); disarm(); }
+    }catch(err){ $("#err").textContent = err.message; disarm(); }
   });
-
-  // ---------- team sign-in
-  const loginDlg = $("#loginDlg");
-  $("#loginBtn").addEventListener("click", () => { $("#fToken").value = ""; $("#loginErr").textContent = ""; loginDlg.showModal(); $("#fToken").focus(); });
-  $("#loginCancel").addEventListener("click", () => loginDlg.close());
-  loginDlg.addEventListener("click", e => { if (e.target === loginDlg) loginDlg.close(); });
-  $("#loginForm").addEventListener("submit", async e => {
-    e.preventDefault();
-    const t = $("#fToken").value.trim(); if (!t) return;
-    const btn = $("#loginSubmit"); btn.disabled = true; btn.textContent = "Checking…"; $("#loginErr").textContent = "";
-    try{
-      const r = await fetch(`https://api.github.com/repos/${REPO}`, {headers:{"Accept":"application/vnd.github+json","Authorization":"Bearer "+t}});
-      if (!r.ok) throw new Error("auth");
-      const repo = await r.json();
-      if (!repo.permissions || !repo.permissions.push) throw new Error("perm");
-      token = t;
-      try{ localStorage.setItem(TOKEN_KEY, t); }catch(e){}
-      matches = (await readGitHub()).map(clean);
-      loginDlg.close(); syncAuthUI(); render(); toast("Signed in. You can now add and edit matches.");
-    }catch(err){
-      token = null;
-      $("#loginErr").textContent = err.message === "perm"
-        ? "That key can read the repository but can't edit it. Give it Contents: Read and write."
-        : "GitHub didn't accept that key. Check that you copied all of it and that it has access to CedarGroveEsportsStats.";
-    }finally{ btn.disabled = false; btn.textContent = "Sign in"; }
-  });
-  $("#logoutBtn").addEventListener("click", () => {
-    token = null; sha = null;
-    try{ localStorage.removeItem(TOKEN_KEY); }catch(e){}
-    syncAuthUI(); render(); toast("Signed out");
-  });
-  function syncAuthUI(){ $("#loginBtn").hidden = !!token; $("#logoutBtn").hidden = !token; }
 
   // ---------- boot
   try{ const t = localStorage.getItem(TAB_KEY); if (t === "" || GAMES[t]) setTab(t); }catch(e){}
-  try{ token = localStorage.getItem(TOKEN_KEY) || null; }catch(e){}
-  syncAuthUI();
   (async () => {
     try{
-      if (token){
-        try{ matches = (await readGitHub()).map(clean); }
-        catch(e){ if (e.message === "auth"){ token = null; try{localStorage.removeItem(TOKEN_KEY)}catch(_){} syncAuthUI(); toast("Your sign-in expired. Sign in again to post results.", true); } matches = (await readPublic()).map(clean); }
-      } else matches = (await readPublic()).map(clean);
+      const data = await api("");
+      matches = Array.isArray(data) ? data : [];
     }catch(e){
-      matches = []; loaded = true;
+      loaded = true;
       $("#record").textContent = "Couldn't load results. Refresh to try again.";
       $("#grid").innerHTML = "";
       return;

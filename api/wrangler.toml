@@ -1,0 +1,9 @@
+name = "cedargrove-esports-api"
+main = "src/index.js"
+compatibility_date = "2025-09-01"
+workers_dev = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "cedargrove-esports"
+database_id = "7850ab74-d042-4d3d-84b1-467461ebb51c"
