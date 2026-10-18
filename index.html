@@ -1,0 +1,632 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Cedar Grove Match Log</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: scoreboard header with team record, tabbed workspace (Overview / Log match / History), two-column analysis grid that stacks on phones */
+:root{
+  --bg:#eef1f5; --panel:#ffffff; --ink:#141a24; --muted:#5b6575; --line:#d8dee7; --soft:#e5e9f0;
+  --accent:#e2571c; --accent-ink:#ffffff;
+  --win:#13895f; --win-soft:#d6f0e5; --loss:#c8323a; --loss-soft:#f8dcde; --draw:#8a7a2a; --draw-soft:#f1ebcf;
+  --display:"Chakra Petch", "Segoe UI", system-ui, sans-serif;
+  --body:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f141c; --panel:#171e29; --ink:#e8edf4; --muted:#93a0b3; --line:#2a3443; --soft:#202938;
+  --accent:#ff7a3d; --accent-ink:#1a0e06;
+  --win:#3fcf95; --win-soft:#123a2b; --loss:#ff6b72; --loss-soft:#44191d; --draw:#d9c56a; --draw-soft:#3a3418;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f141c; --panel:#171e29; --ink:#e8edf4; --muted:#93a0b3; --line:#2a3443; --soft:#202938;
+  --accent:#ff7a3d; --accent-ink:#1a0e06;
+  --win:#3fcf95; --win-soft:#123a2b; --loss:#ff6b72; --loss-soft:#44191d; --draw:#d9c56a; --draw-soft:#3a3418;
+  color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5}
+.wrap{max-width:1120px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;letter-spacing:.01em}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.label{font-size:11px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:600}
+
+/* header */
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:18px}
+header.top h1{font-size:30px;font-weight:700;line-height:1.1}
+header.top h1 span{color:var(--accent)}
+header.top p{margin:4px 0 0;color:var(--muted)}
+.filter{display:flex;align-items:center;gap:8px}
+select,input,textarea{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:8px 10px;min-width:0}
+select:focus-visible,input:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+nav.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:20px;overflow-x:auto}
+nav.tabs button{font-family:var(--display);font-weight:600;font-size:15px;background:none;border:0;color:var(--muted);padding:10px 14px;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1px;white-space:nowrap}
+nav.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+nav.tabs button:hover{color:var(--ink)}
+
+.banner{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;background:var(--soft);border:1px dashed var(--line);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:14px}
+.banner b{font-family:var(--display)}
+
+.btn{font-family:var(--display);font-weight:600;font-size:14px;border-radius:6px;padding:9px 16px;cursor:pointer;border:1px solid var(--line);background:var(--panel);color:var(--ink)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.small{padding:4px 10px;font-size:12px}
+.btn.danger{color:var(--loss)}
+.btn.danger.armed{background:var(--loss);color:#fff;border-color:var(--loss)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* scoreboard */
+.board{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:16px}
+.board > div{padding:16px 18px;border-right:1px solid var(--line)}
+.board > div:last-child{border-right:0}
+.board .big{font-family:var(--mono);font-weight:700;font-size:30px;line-height:1.15;font-variant-numeric:tabular-nums}
+.board .sub{font-size:13px;color:var(--muted)}
+.w{color:var(--win)} .l{color:var(--loss)} .d{color:var(--draw)}
+
+.form{display:flex;gap:4px;flex-wrap:wrap}
+.chip{display:inline-grid;place-items:center;min-width:26px;height:26px;padding:0 6px;border-radius:5px;font-family:var(--mono);font-weight:700;font-size:12px}
+.chip.W{background:var(--win-soft);color:var(--win)}
+.chip.L{background:var(--loss-soft);color:var(--loss)}
+.chip.D{background:var(--draw-soft);color:var(--draw)}
+
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px;min-width:0}
+.panel h2{font-size:17px;font-weight:600;margin-bottom:2px}
+.panel .hint{color:var(--muted);font-size:13px;margin:0 0 12px}
+.panel.wide{grid-column:1 / -1}
+.empty{color:var(--muted);font-size:14px;padding:8px 0}
+
+/* bar rows */
+.bars{display:grid;gap:9px}
+.bar{display:grid;grid-template-columns:minmax(0,9rem) minmax(0,1fr) auto;gap:10px;align-items:center;font-size:14px}
+.bar .name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.track{height:10px;background:var(--soft);border-radius:3px;overflow:hidden;display:flex}
+.track i{display:block;height:100%}
+.track .fw{background:var(--win)} .track .fl{background:var(--loss)} .track .fd{background:var(--draw)} .track .fa{background:var(--accent)}
+.bar .val{font-family:var(--mono);font-size:12px;color:var(--muted);white-space:nowrap;text-align:right;min-width:6.5rem}
+.bar .val b{color:var(--ink)}
+
+/* tables */
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);text-align:left;font-weight:600;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:9px 10px;border-bottom:1px solid var(--soft);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.score{font-family:var(--mono);font-weight:700;white-space:nowrap}
+.tags{display:flex;flex-wrap:wrap;gap:4px}
+.tag{font-size:12px;background:var(--soft);border-radius:4px;padding:1px 7px;color:var(--muted);white-space:nowrap}
+.notes{color:var(--muted);font-size:13px;max-width:28rem}
+.actions{display:flex;gap:6px;white-space:nowrap}
+
+/* form */
+form.log{display:grid;gap:16px;max-width:760px}
+.row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.field{display:grid;gap:5px;min-width:0}
+.field > span{font-size:13px;font-weight:600}
+.field small{color:var(--muted);font-size:12px}
+.scorebox{display:flex;align-items:center;gap:8px}
+.scorebox input{width:5.5rem;font-family:var(--mono);font-size:22px;font-weight:700;text-align:center}
+.scorebox .vs{font-family:var(--display);color:var(--muted)}
+.result-pill{font-family:var(--display);font-weight:700;padding:4px 12px;border-radius:999px;font-size:14px}
+.reason-pick{display:flex;flex-wrap:wrap;gap:6px}
+.reason-pick button{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:999px;padding:5px 12px;cursor:pointer}
+.reason-pick button[aria-pressed="true"]{background:var(--loss-soft);border-color:var(--loss);color:var(--loss)}
+.formbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.msg{font-size:14px;color:var(--muted)}
+.msg.err{color:var(--loss)}
+
+.histbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:12px}
+.histbar input{width:min(100%,18rem)}
+
+@media (max-width:760px){
+  .board{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .board > div:nth-child(2){border-right:0}
+  .board > div:nth-child(-n+2){border-bottom:1px solid var(--line)}
+  .grid{grid-template-columns:minmax(0,1fr)}
+  .row{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .bar{grid-template-columns:minmax(0,6.5rem) minmax(0,1fr) auto}
+  .bar .val{min-width:0}
+  header.top h1{font-size:24px}
+}
+@media (max-width:440px){ .row{grid-template-columns:minmax(0,1fr)} }
+@media (prefers-reduced-motion: no-preference){ .track i{transition:width .4s ease} }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Cedar Grove <span>Match</span> Log</h1>
+      <p id="subtitle">Every scrim, league and tournament game in one place.</p>
+    </div>
+    <label class="filter"><span class="label">Game</span>
+      <select id="gameFilter"><option value="">All games</option></select>
+    </label>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" id="tab-overview" aria-selected="true" data-tab="overview">Overview</button>
+    <button role="tab" id="tab-log" aria-selected="false" data-tab="log">Log a match</button>
+    <button role="tab" id="tab-history" aria-selected="false" data-tab="history">History</button>
+  </nav>
+
+  <div id="statusBanner" class="banner" hidden></div>
+
+  <!-- OVERVIEW -->
+  <section id="view-overview">
+    <div class="board">
+      <div><div class="label">Record</div><div class="big" id="sRecord">0–0</div><div class="sub" id="sRecordSub">wins – losses</div></div>
+      <div><div class="label">Win rate</div><div class="big" id="sRate">–</div><div class="sub" id="sRateSub">&nbsp;</div></div>
+      <div><div class="label">Current streak</div><div class="big" id="sStreak">–</div><div class="sub" id="sStreakSub">&nbsp;</div></div>
+      <div><div class="label">Score diff</div><div class="big" id="sDiff">0</div><div class="sub" id="sDiffSub">rounds / maps won minus lost</div></div>
+    </div>
+
+    <div class="grid">
+      <div class="panel wide">
+        <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;align-items:center">
+          <div><h2>Last 10</h2><p class="hint" style="margin:0">Oldest on the left, most recent on the right.</p></div>
+          <div class="form" id="form10"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Why we lose</h2>
+        <p class="hint">Reasons tagged on our losses, most common first.</p>
+        <div class="bars" id="reasonBars"></div>
+      </div>
+
+      <div class="panel">
+        <h2>Maps</h2>
+        <p class="hint">Weakest maps first. Green is wins, red is losses.</p>
+        <div class="bars" id="mapBars"></div>
+      </div>
+
+      <div class="panel">
+        <h2>Opponents</h2>
+        <p class="hint">Teams we struggle against most.</p>
+        <div class="bars" id="oppBars"></div>
+      </div>
+
+      <div class="panel">
+        <h2>By match type and side</h2>
+        <p class="hint">Scrims vs official games, and which side we started on.</p>
+        <div class="bars" id="typeBars"></div>
+        <div class="bars" id="sideBars" style="margin-top:14px"></div>
+      </div>
+
+      <div class="panel wide">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:8px">
+          <h2>Recent matches</h2>
+          <button class="btn small" data-goto="history">See all</button>
+        </div>
+        <div class="tablewrap"><table id="recentTable"></table></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LOG -->
+  <section id="view-log" hidden>
+    <form class="log" id="logForm" autocomplete="off">
+      <div class="row">
+        <label class="field"><span>Date</span><input type="date" id="fDate" required></label>
+        <label class="field"><span>Game</span><input id="fGame" list="gameList" placeholder="e.g. CS2" required></label>
+        <label class="field"><span>Match type</span>
+          <select id="fType">
+            <option>Scrim</option><option>League</option><option>Tournament</option><option>Ranked / Pug</option><option>Other</option>
+          </select>
+        </label>
+      </div>
+      <div class="row">
+        <label class="field"><span>Opponent</span><input id="fOpp" list="oppList" placeholder="Team name" required></label>
+        <label class="field"><span>Map / mode</span><input id="fMap" list="mapList" placeholder="e.g. Mirage"></label>
+        <label class="field"><span>Starting side</span>
+          <select id="fSide"><option value="">Not tracked</option><option>Attack / T</option><option>Defense / CT</option></select>
+        </label>
+      </div>
+
+      <div class="field">
+        <span>Final score</span>
+        <div class="scorebox">
+          <input type="number" id="fUs" min="0" inputmode="numeric" placeholder="Us" required aria-label="Our score">
+          <span class="vs">vs</span>
+          <input type="number" id="fThem" min="0" inputmode="numeric" placeholder="Them" required aria-label="Their score">
+          <span class="result-pill" id="resultPill"></span>
+        </div>
+        <small>Rounds for a single map, or maps won for a series.</small>
+      </div>
+
+      <div class="field">
+        <span>What cost us?</span>
+        <small>Tag anything that went wrong. Tags on losses feed the "Why we lose" chart.</small>
+        <div class="reason-pick" id="reasonPick"></div>
+        <div style="display:flex;gap:8px;max-width:24rem">
+          <input id="fCustomReason" placeholder="Add your own tag" style="flex:1">
+          <button type="button" class="btn small" id="addReason">Add</button>
+        </div>
+      </div>
+
+      <label class="field"><span>Notes</span><textarea id="fNotes" rows="3" placeholder="Key moments, what to practise, player notes…"></textarea></label>
+
+      <div class="formbar">
+        <button class="btn primary" type="submit" id="saveBtn">Save match</button>
+        <button class="btn" type="button" id="cancelEdit" hidden>Cancel edit</button>
+        <span class="msg" id="formMsg" role="status"></span>
+      </div>
+    </form>
+    <datalist id="gameList"></datalist><datalist id="oppList"></datalist><datalist id="mapList"></datalist>
+  </section>
+
+  <!-- HISTORY -->
+  <section id="view-history" hidden>
+    <div class="histbar">
+      <input id="search" type="search" placeholder="Search opponent, map, notes…" aria-label="Search matches">
+      <span class="msg" id="histCount"></span>
+      <div class="actions" id="fileActions" hidden>
+        <button class="btn small" type="button" id="exportBtn">Export JSON</button>
+        <label class="btn small" for="importFile" style="cursor:pointer">Import JSON</label>
+        <input type="file" id="importFile" accept="application/json,.json" hidden>
+      </div>
+    </div>
+    <div class="panel"><div class="tablewrap"><table id="histTable"></table></div></div>
+  </section>
+</div>
+
+<script>
+(function(){
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+  const DEFAULT_REASONS = ["Early game","Mid-round calls","Closing out / late game","Economy","Pistol rounds","Retakes","Clutches","Comms","Draft / comp","Individual mistakes","Tilt","Outclassed"];
+  const DEFAULT_GAMES = ["CS2","Valorant","League of Legends","Rocket League","Overwatch 2","Rainbow Six Siege"];
+  const DEFAULT_MAPS = ["Mirage","Inferno","Nuke","Ancient","Anubis","Dust2","Train","Ascent","Bind","Haven"];
+
+  // Example data shown only while the log is empty; never written to the store.
+  const EXAMPLES = [
+    ["2026-09-20","Scrim","Northside","Mirage","Attack / T",13,9,[],""],
+    ["2026-09-22","League","Vantage","Nuke","Defense / CT",8,13,["Retakes","Economy"],""],
+    ["2026-09-25","Scrim","Iron Owls","Inferno","Attack / T",13,11,["Closing out / late game"],""],
+    ["2026-09-27","League","Kestrel","Nuke","Attack / T",10,13,["Retakes","Comms"],""],
+    ["2026-10-01","Scrim","Vantage","Ancient","Defense / CT",13,6,[],""],
+    ["2026-10-04","Tournament","Halcyon","Mirage","Defense / CT",11,13,["Pistol rounds","Economy"],""],
+    ["2026-10-06","Scrim","Northside","Anubis","Attack / T",13,10,[],""],
+    ["2026-10-09","League","Iron Owls","Nuke","Defense / CT",9,13,["Retakes","Mid-round calls"],""],
+    ["2026-10-12","Tournament","Kestrel","Inferno","Attack / T",13,8,[],""],
+    ["2026-10-14","Scrim","Halcyon","Ancient","Defense / CT",13,12,["Clutches"],""],
+  ].map((r,i)=>({id:"ex"+i,date:r[0],game:"CS2",type:r[1],opponent:r[2],map:r[3],side:r[4],us:r[5],them:r[6],reasons:r[7],notes:r[8],createdAt:i}));
+
+  let db = null, col = null, canWrite = true;
+  let matches = [];         // live records
+  let loaded = false;       // first snapshot received
+  let editingId = null;
+  let picked = new Set();
+  let customReasons = [];
+
+  const LS_KEY = "cedargrove-matches";
+  function loadLocal(){ try{ const v = JSON.parse(localStorage.getItem(LS_KEY)||"[]"); return Array.isArray(v)?v:[]; }catch(e){ return []; } }
+  function saveLocal(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(matches)); return true; }catch(e){ return false; } }
+
+  const resultOf = m => m.us > m.them ? "W" : m.us < m.them ? "L" : "D";
+  const sortDesc = (a,b) => (b.date||"").localeCompare(a.date||"") || (b.createdAt||0)-(a.createdAt||0);
+
+  // ---------- tabs
+  function showTab(name){
+    for (const b of document.querySelectorAll("nav.tabs button")) b.setAttribute("aria-selected", String(b.dataset.tab===name));
+    for (const v of ["overview","log","history"]) $("#view-"+v).hidden = v!==name;
+    try{ localStorage.setItem("mt-tab", name); }catch(e){}
+  }
+  document.querySelectorAll("nav.tabs button").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));
+  document.querySelectorAll("[data-goto]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.goto)));
+
+  // ---------- data selection
+  const usingExamples = () => loaded && matches.length===0;
+  function dataset(){
+    const base = usingExamples() ? EXAMPLES : matches;
+    const g = $("#gameFilter").value;
+    return base.filter(m => !g || m.game===g).slice().sort(sortDesc);
+  }
+
+  // ---------- aggregate helpers
+  function tally(list, keyFn){
+    const map = new Map();
+    for (const m of list){
+      const k = keyFn(m); if (!k) continue;
+      const t = map.get(k) || {name:k,W:0,L:0,D:0,n:0};
+      t[resultOf(m)]++; t.n++; map.set(k,t);
+    }
+    return [...map.values()];
+  }
+  function wlBars(el, rows, emptyText, limit){
+    if (!rows.length){ el.innerHTML = `<div class="empty">${emptyText}</div>`; return; }
+    rows.sort((a,b)=> (a.W/a.n)-(b.W/b.n) || b.n-a.n);
+    el.innerHTML = rows.slice(0,limit||8).map(r=>{
+      const pct = Math.round(r.W/r.n*100);
+      return `<div class="bar"><span class="name" title="${esc(r.name)}">${esc(r.name)}</span>
+        <span class="track" role="img" aria-label="${r.W} wins, ${r.L} losses"><i class="fw" style="width:${r.W/r.n*100}%"></i><i class="fd" style="width:${r.D/r.n*100}%"></i><i class="fl" style="width:${r.L/r.n*100}%"></i></span>
+        <span class="val"><b>${r.W}–${r.L}${r.D?"–"+r.D:""}</b> · ${pct}%</span></div>`;
+    }).join("");
+  }
+
+  // ---------- render
+  function render(){
+    const list = dataset();
+    const ex = usingExamples();
+
+    // banner
+    const banner = $("#statusBanner");
+    if (!db){
+      banner.hidden = false;
+      banner.innerHTML = ex
+        ? `<span><b>Example data.</b> Matches are saved in this browser. Log your first match to replace these samples, or import a teammate's export from History.</span><button class="btn small primary" data-goto="log">Log first match</button>`
+        : `<span><b>Saved in this browser only.</b> Use Export on the History tab to share the log with teammates.</span>`;
+      banner.querySelector("button")?.addEventListener("click",()=>showTab("log"));
+    } else if (ex){
+      banner.hidden = false;
+      banner.innerHTML = `<span><b>Example data.</b> These sample games show how the page works. They disappear when you log your first real match.</span><button class="btn small primary" data-goto="log">Log first match</button>`;
+      banner.querySelector("button").addEventListener("click",()=>showTab("log"));
+    } else banner.hidden = true;
+
+    // scoreboard
+    const W = list.filter(m=>resultOf(m)==="W").length, L = list.filter(m=>resultOf(m)==="L").length, D = list.length-W-L;
+    $("#sRecord").innerHTML = `<span class="w">${W}</span>–<span class="l">${L}</span>${D?`–<span class="d">${D}</span>`:""}`;
+    $("#sRecordSub").textContent = `${list.length} match${list.length===1?"":"es"}${D?" · incl. draws":""}`;
+    $("#sRate").textContent = list.length ? Math.round(W/list.length*100)+"%" : "–";
+    const last10 = list.slice(0,10);
+    const w10 = last10.filter(m=>resultOf(m)==="W").length;
+    $("#sRateSub").textContent = last10.length ? `${w10}/${last10.length} in last ${last10.length}` : " ";
+    if (list.length){
+      const r0 = resultOf(list[0]); let k=0; while(k<list.length && resultOf(list[k])===r0) k++;
+      const el = $("#sStreak"); el.textContent = r0+k; el.className = "big "+r0.toLowerCase();
+      $("#sStreakSub").textContent = r0==="W" ? `${k} win${k>1?"s":""} in a row` : r0==="L" ? `${k} loss${k>1?"es":""} in a row` : `${k} draw${k>1?"s":""}`;
+    } else { $("#sStreak").textContent="–"; $("#sStreak").className="big"; $("#sStreakSub").textContent=" "; }
+    const diff = list.reduce((s,m)=>s+(m.us-m.them),0);
+    const dEl = $("#sDiff"); dEl.textContent = (diff>0?"+":"")+diff; dEl.className = "big "+(diff>0?"w":diff<0?"l":"");
+
+    // form
+    $("#form10").innerHTML = last10.length ? last10.slice().reverse().map(m=>{const r=resultOf(m);return `<span class="chip ${r}" title="${esc(m.date)} vs ${esc(m.opponent)} ${m.us}-${m.them}">${r}</span>`}).join("") : `<span class="empty">No matches yet.</span>`;
+
+    // reasons
+    const losses = list.filter(m=>resultOf(m)==="L");
+    const rc = new Map();
+    for (const m of losses) for (const r of (m.reasons||[])) rc.set(r,(rc.get(r)||0)+1);
+    const rRows = [...rc.entries()].sort((a,b)=>b[1]-a[1]);
+    const rEl = $("#reasonBars");
+    if (!losses.length) rEl.innerHTML = `<div class="empty">No losses in this view. Nice.</div>`;
+    else if (!rRows.length) rEl.innerHTML = `<div class="empty">${losses.length} loss${losses.length>1?"es":""}, but none tagged yet. Add tags when logging a match to see patterns here.</div>`;
+    else rEl.innerHTML = rRows.slice(0,8).map(([name,c])=>`<div class="bar"><span class="name" title="${esc(name)}">${esc(name)}</span>
+      <span class="track" role="img" aria-label="${c} of ${losses.length} losses"><i class="fa" style="width:${c/losses.length*100}%"></i></span>
+      <span class="val"><b>${c}</b> of ${losses.length} losses</span></div>`).join("");
+
+    wlBars($("#mapBars"), tally(list,m=>m.map), "Add a map to your matches to compare them.");
+    wlBars($("#oppBars"), tally(list,m=>m.opponent), "No opponents yet.");
+    wlBars($("#typeBars"), tally(list,m=>m.type), "No matches yet.");
+    wlBars($("#sideBars"), tally(list,m=>m.side ? "Started "+m.side : ""), "Track starting side when logging to compare here.");
+
+    // tables
+    $("#recentTable").innerHTML = tableHTML(list.slice(0,5), false);
+    renderHistory();
+    refreshFilterAndLists();
+  }
+
+  function tableHTML(rows, withActions){
+    if (!rows.length) return `<tbody><tr><td class="empty">No matches to show.</td></tr></tbody>`;
+    const showGame = !$("#gameFilter").value && new Set(rows.map(r=>r.game)).size>1;
+    return `<thead><tr><th>Date</th><th>Result</th>${showGame?"<th>Game</th>":""}<th>Opponent</th><th>Map</th><th>Type</th><th>What cost us</th>${withActions?"<th>Notes</th><th></th>":""}</tr></thead><tbody>` +
+      rows.map(m=>{
+        const r = resultOf(m);
+        return `<tr><td class="num">${esc(m.date)}</td>
+          <td class="score"><span class="chip ${r}">${r}</span> ${m.us}–${m.them}</td>
+          ${showGame?`<td>${esc(m.game)}</td>`:""}
+          <td>${esc(m.opponent)}</td><td>${esc(m.map||"–")}</td><td>${esc(m.type||"")}</td>
+          <td><div class="tags">${(m.reasons||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join("")||'<span class="tag" style="opacity:.6">–</span>'}</div></td>
+          ${withActions?`<td class="notes">${esc(m.notes||"")}</td><td><div class="actions">${String(m.id).startsWith("ex")||!canWrite?"":`<button class="btn small" data-edit="${esc(m.id)}">Edit</button><button class="btn small danger" data-del="${esc(m.id)}">Delete</button>`}</div></td>`:""}
+        </tr>`;
+      }).join("") + `</tbody>`;
+  }
+
+  function renderHistory(){
+    const q = $("#search").value.trim().toLowerCase();
+    const rows = dataset().filter(m => !q || [m.opponent,m.map,m.notes,m.type,m.game,(m.reasons||[]).join(" ")].join(" ").toLowerCase().includes(q));
+    $("#histTable").innerHTML = tableHTML(rows, true);
+    $("#histCount").textContent = `${rows.length} match${rows.length===1?"":"es"}${usingExamples()?" (examples)":""}`;
+  }
+  $("#search").addEventListener("input", renderHistory);
+  $("#gameFilter").addEventListener("change", ()=>{ try{localStorage.setItem("mt-game",$("#gameFilter").value)}catch(e){} render(); });
+
+  function refreshFilterAndLists(){
+    const src = matches.length ? matches : (usingExamples()?EXAMPLES:[]);
+    const games = [...new Set(src.map(m=>m.game).filter(Boolean))].sort();
+    const sel = $("#gameFilter"), cur = sel.value;
+    const want = `<option value="">All games</option>` + games.map(g=>`<option${g===cur?" selected":""}>${esc(g)}</option>`).join("");
+    if (sel.innerHTML !== want) sel.innerHTML = want;
+    if (cur && !games.includes(cur)) sel.value = "";
+    const uniq = (arr) => [...new Set(arr.filter(Boolean))];
+    $("#gameList").innerHTML = uniq([...matches.map(m=>m.game), ...DEFAULT_GAMES]).map(v=>`<option value="${esc(v)}">`).join("");
+    $("#oppList").innerHTML = uniq(matches.map(m=>m.opponent)).map(v=>`<option value="${esc(v)}">`).join("");
+    $("#mapList").innerHTML = uniq([...matches.map(m=>m.map), ...DEFAULT_MAPS]).map(v=>`<option value="${esc(v)}">`).join("");
+  }
+
+  // ---------- history actions
+  let armedTimer = null;
+  $("#histTable").addEventListener("click", async e=>{
+    const ed = e.target.closest("[data-edit]"), del = e.target.closest("[data-del]");
+    if (ed){ startEdit(ed.dataset.edit); return; }
+    if (del){
+      if (!del.classList.contains("armed")){
+        document.querySelectorAll(".btn.armed").forEach(b=>{b.classList.remove("armed");b.textContent="Delete"});
+        del.classList.add("armed"); del.textContent = "Confirm delete";
+        clearTimeout(armedTimer); armedTimer = setTimeout(()=>{del.classList.remove("armed");del.textContent="Delete"},4000);
+        return;
+      }
+      del.disabled = true; del.textContent = "Deleting…";
+      const id = del.dataset.del;
+      try{
+        if (col) await col.doc(id).delete();
+        else { matches = matches.filter(m=>m.id!==id); saveLocal(); render(); }
+      }catch(err){ del.disabled=false; del.textContent="Delete"; alertMsg("Couldn't delete that match. Try again."); }
+    }
+  });
+  function alertMsg(t){ const b=$("#statusBanner"); b.hidden=false; b.innerHTML=`<span>${esc(t)}</span>`; }
+
+  // ---------- form
+  function renderReasonPick(){
+    const all = [...new Set([...DEFAULT_REASONS, ...customReasons, ...matches.flatMap(m=>m.reasons||[]), ...picked])];
+    $("#reasonPick").innerHTML = all.map(r=>`<button type="button" aria-pressed="${picked.has(r)}" data-r="${esc(r)}">${esc(r)}</button>`).join("");
+  }
+  $("#reasonPick").addEventListener("click", e=>{
+    const b = e.target.closest("[data-r]"); if(!b) return;
+    const r = b.dataset.r; picked.has(r)?picked.delete(r):picked.add(r);
+    b.setAttribute("aria-pressed", String(picked.has(r)));
+  });
+  function addCustom(){
+    const v = $("#fCustomReason").value.trim().slice(0,40); if(!v) return;
+    if (!customReasons.includes(v)) customReasons.push(v);
+    picked.add(v); $("#fCustomReason").value=""; renderReasonPick();
+  }
+  $("#addReason").addEventListener("click", addCustom);
+  $("#fCustomReason").addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); addCustom(); } });
+
+  function updatePill(){
+    const us = $("#fUs").value, them = $("#fThem").value, p = $("#resultPill");
+    if (us===""||them===""){ p.textContent=""; p.className="result-pill"; return; }
+    const r = +us > +them ? "W" : +us < +them ? "L" : "D";
+    p.textContent = r==="W"?"Win":r==="L"?"Loss":"Draw"; p.className = "result-pill chip "+r;
+  }
+  $("#fUs").addEventListener("input", updatePill); $("#fThem").addEventListener("input", updatePill);
+
+  const today = () => { const d=new Date(); return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10); };
+  function resetForm(keep){
+    const last = keep || {};
+    $("#fDate").value = today();
+    $("#fGame").value = last.game || (matches[0]?.game ?? "");
+    $("#fType").value = last.type || "Scrim";
+    $("#fOpp").value = ""; $("#fMap").value = ""; $("#fSide").value = "";
+    $("#fUs").value = ""; $("#fThem").value = ""; $("#fNotes").value = "";
+    picked = new Set(); editingId = null;
+    $("#saveBtn").textContent = "Save match"; $("#cancelEdit").hidden = true;
+    renderReasonPick(); updatePill();
+  }
+  function startEdit(id){
+    const m = matches.find(x=>x.id===id); if(!m) return;
+    editingId = id;
+    $("#fDate").value=m.date||""; $("#fGame").value=m.game||""; $("#fType").value=m.type||"Scrim";
+    $("#fOpp").value=m.opponent||""; $("#fMap").value=m.map||""; $("#fSide").value=m.side||"";
+    $("#fUs").value=m.us; $("#fThem").value=m.them; $("#fNotes").value=m.notes||"";
+    picked = new Set(m.reasons||[]); renderReasonPick(); updatePill();
+    $("#saveBtn").textContent = "Save changes"; $("#cancelEdit").hidden = false;
+    $("#formMsg").textContent = `Editing ${m.date} vs ${m.opponent}`; $("#formMsg").className="msg";
+    showTab("log");
+  }
+  $("#cancelEdit").addEventListener("click", ()=>{ resetForm(); $("#formMsg").textContent=""; });
+
+  $("#logForm").addEventListener("submit", async e=>{
+    e.preventDefault();
+    const msg = $("#formMsg");
+    const us = parseInt($("#fUs").value,10), them = parseInt($("#fThem").value,10);
+    if (!Number.isFinite(us)||!Number.isFinite(them)||us<0||them<0){ msg.textContent="Enter both scores as whole numbers."; msg.className="msg err"; return; }
+    const prev = editingId ? matches.find(m=>m.id===editingId) : null;
+    const rec = {
+      date: $("#fDate").value || today(),
+      game: $("#fGame").value.trim().slice(0,40),
+      type: $("#fType").value,
+      opponent: $("#fOpp").value.trim().slice(0,60),
+      map: $("#fMap").value.trim().slice(0,40),
+      side: $("#fSide").value,
+      us, them,
+      reasons: [...picked].slice(0,12),
+      notes: $("#fNotes").value.trim().slice(0,2000),
+      createdAt: prev?.createdAt ?? Date.now(),
+    };
+    if (!rec.game || !rec.opponent){ msg.textContent="Game and opponent are required."; msg.className="msg err"; return; }
+    const btn = $("#saveBtn"); btn.disabled = true; msg.textContent="Saving…"; msg.className="msg";
+    try{
+      if (col){
+        if (editingId) await col.doc(editingId).set(rec);
+        else await col.doc().set(rec);
+      } else {
+        if (editingId) matches = matches.map(m=>m.id===editingId?{...rec,id:editingId}:m);
+        else matches = [...matches, {...rec,id:"m"+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}];
+        if (!saveLocal()) throw {code:"local"};
+        render();
+      }
+      const r = resultOf(rec);
+      msg.textContent = `${editingId?"Updated":"Saved"}: ${r==="W"?"win":r==="L"?"loss":"draw"} vs ${rec.opponent}, ${us}–${them}.`;
+      const wasEdit = !!editingId;
+      resetForm(rec);
+      if (wasEdit) showTab("history");
+    }catch(err){
+      if (err && err.code==="invalid_argument"){ canWrite=false; msg.textContent="You have view-only access, so this page can't save matches for you. Ask the owner for Contributor access."; }
+      else if (err && err.code==="quota_exceeded"){ msg.textContent="The match log is full. Delete some old matches to make room."; }
+      else if (err && err.code==="local"){ msg.textContent="This browser blocked saving (private mode or blocked site data). Export your matches before closing the tab."; }
+      else msg.textContent="Couldn't save. Check your connection and try again.";
+      msg.className="msg err";
+    }finally{ btn.disabled = false; }
+  });
+
+  // ---------- boot
+  try{ const t = localStorage.getItem("mt-tab"); if (t && ["overview","log","history"].includes(t)) showTab(t); }catch(e){}
+  resetForm();
+  render();
+
+  function startLocal(){
+    matches = loadLocal(); loaded = true;
+    $("#fileActions").hidden = false;
+    try{ const g = localStorage.getItem("mt-game"); if (g && matches.some(m=>m.game===g)) { refreshFilterAndLists(); $("#gameFilter").value = g; } }catch(e){}
+    if (!$("#fGame").value && matches.length) $("#fGame").value = matches.slice().sort(sortDesc)[0].game || "";
+    renderReasonPick(); render();
+  }
+
+  $("#exportBtn").addEventListener("click", ()=>{
+    const blob = new Blob([JSON.stringify(matches.slice().sort(sortDesc), null, 2)], {type:"application/json"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = `cedargrove-matches-${today()}.json`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href), 2000);
+  });
+  $("#importFile").addEventListener("change", async e=>{
+    const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+    try{
+      const data = JSON.parse(await f.text());
+      if (!Array.isArray(data)) throw 0;
+      const byId = new Map(matches.map(m=>[m.id,m]));
+      let added = 0;
+      for (const m of data){
+        if (!m || typeof m!=="object" || !Number.isFinite(+m.us) || !Number.isFinite(+m.them) || !m.opponent) continue;
+        const id = String(m.id || "m"+Math.random().toString(36).slice(2,10));
+        if (!byId.has(id)) added++;
+        byId.set(id, {id, date:String(m.date||""), game:String(m.game||""), type:String(m.type||""), opponent:String(m.opponent), map:String(m.map||""), side:String(m.side||""), us:+m.us, them:+m.them, reasons:Array.isArray(m.reasons)?m.reasons.map(String):[], notes:String(m.notes||""), createdAt:+m.createdAt||0});
+      }
+      matches = [...byId.values()]; saveLocal(); renderReasonPick(); render();
+      alertMsg(`Imported ${added} new match${added===1?"":"es"}. Matches that were already here got updated.`);
+    }catch(err){ alertMsg("That file isn't a match log export. Pick a .json file made with Export."); }
+  });
+
+  (async function connect(){
+    if (!window.claude || !claude.use){ startLocal(); return; }
+    const [d, user] = await Promise.all([claude.use("db"), claude.use("user")]);
+    if (user){
+      try{ const c = await user.can("data.write"); if (c===false){ canWrite=false; $("#tab-log").hidden = true; } }catch(e){}
+    }
+    if (!d){ startLocal(); return; }
+    db = d; col = db.collection("matches");
+    col.onSnapshot(snap=>{
+      matches = snap.docs.map(s=>({id:s.id, ...s.data()}));
+      loaded = true;
+      try{ const g = localStorage.getItem("mt-game"); if (g && !$("#gameFilter").value && matches.some(m=>m.game===g)) { refreshFilterAndLists(); $("#gameFilter").value = g; } }catch(e){}
+      if (!editingId && !$("#fGame").value && matches.length) $("#fGame").value = matches.slice().sort(sortDesc)[0].game || "";
+      renderReasonPick();
+      render();
+    }, err=>{
+      alertMsg("Lost connection to the match log. Reload the page to reconnect.");
+    });
+  })();
+})();
+</script>
+
+</body>
+</html>
