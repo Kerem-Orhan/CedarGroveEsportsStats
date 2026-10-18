@@ -4,127 +4,170 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Cedar Grove Esports</title>
+<meta name="description" content="Match results for Cedar Grove High School esports: Smash Bros and Street Fighter.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;1,800;1,900&family=Barlow:wght@400;500;600&display=swap">
 <style>
-/* Layout: header bar (school name left, game tabs right) above a "Recent" grid of match cards; add/edit happens in a dialog */
+/* Layout: black broadcast-style header with angled yellow tabs, "Recent" grid of cut-corner match cards; team editing lives in dialogs */
 :root{
-  --bg:#f2f4f1; --card:#ffffff; --ink:#16201b; --muted:#5e6b64; --line:#dde3de;
-  --brand:#1f5c3f; --brand-ink:#ffffff;
-  --win:#1d8a4e; --loss:#c43a31; --draw:#9a7d1c;
-  --smash:#d6332a; --smash-2:#f2a12c;
-  --sf:#2446a6; --sf-2:#f5c518;
-  --other:#4b5563; --other-2:#9ca3af;
+  color-scheme:dark;
+  --bg:#0a0a0b; --panel:#141416; --panel-2:#1b1b1e; --line:#2a2a2e;
+  --ink:#f4f3ee; --muted:#8d8c86;
+  --y:#ffd400; --y-deep:#c9a700; --on-y:#0a0a0b;
+  --loss:#ff4b4b;
   --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
   --body:"Barlow",system-ui,"Segoe UI",sans-serif;
+  --cut:14px;
 }
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#101512; --card:#18201b; --ink:#e9efeb; --muted:#9aa8a0; --line:#2a352f;
-  --brand:#2f8a5f; --brand-ink:#ffffff; --win:#43c47e; --loss:#ff6b61; --draw:#e0c050; color-scheme:dark}}
-:root[data-theme="dark"]{
-  --bg:#101512; --card:#18201b; --ink:#e9efeb; --muted:#9aa8a0; --line:#2a352f;
-  --brand:#2f8a5f; --brand-ink:#ffffff; --win:#43c47e; --loss:#ff6b61; --draw:#e0c050; color-scheme:dark}
-
 *{box-sizing:border-box}
-html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5}
+html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;
+  background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);
+  background-size:40px 40px}
 [hidden]{display:none!important}
 img{max-width:100%}
-.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1200px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 button,input,select,textarea{font:inherit;color:inherit}
-:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+:focus-visible{outline:2px solid var(--y);outline-offset:3px}
 
 /* ---------- header */
-.top{background:var(--brand);color:var(--brand-ink)}
-.top .wrap{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 24px;padding-block:14px}
-.school{display:flex;align-items:center;gap:12px;min-width:0}
-.crest{width:42px;height:42px;flex:none;border-radius:8px;background:var(--brand-ink);color:var(--brand);display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:20px;letter-spacing:.02em}
-.school h1{margin:0;font-family:var(--display);font-weight:700;font-size:24px;line-height:1.05;letter-spacing:.02em;text-transform:uppercase}
-.school small{display:block;font-size:13px;opacity:.8;letter-spacing:.04em}
+.top{background:#000;border-bottom:3px solid var(--y);position:relative}
+.top .wrap{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px 28px;padding-block:16px}
+.school{display:flex;align-items:center;gap:14px;min-width:0}
+.crest{width:50px;height:50px;flex:none;background:var(--y);color:var(--on-y);display:grid;place-items:center;
+  font-family:var(--display);font-style:italic;font-weight:900;font-size:24px;letter-spacing:-.01em;
+  clip-path:polygon(0 0,100% 0,100% 72%,72% 100%,0 100%)}
+.school h1{margin:0;font-family:var(--display);font-style:italic;font-weight:900;font-size:30px;line-height:.95;text-transform:uppercase;letter-spacing:.01em}
+.school h1 span{color:var(--y)}
+.school small{display:block;margin-top:4px;font-family:var(--display);font-weight:600;font-size:13px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
 .games{display:flex;flex-wrap:wrap;gap:6px}
-.games button{border:1.5px solid rgba(255,255,255,.35);background:transparent;color:var(--brand-ink);border-radius:999px;padding:6px 16px;font-family:var(--display);font-weight:700;font-size:16px;letter-spacing:.04em;text-transform:uppercase;cursor:pointer}
-.games button:hover{border-color:var(--brand-ink)}
-.games button[aria-pressed="true"]{background:var(--brand-ink);color:var(--brand);border-color:var(--brand-ink)}
+.games button{position:relative;border:0;background:var(--panel-2);color:var(--ink);padding:9px 22px;cursor:pointer;
+  font-family:var(--display);font-style:italic;font-weight:800;font-size:17px;letter-spacing:.06em;text-transform:uppercase;
+  clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%);transition:background .15s,color .15s}
+.games button:hover{background:#2a2a2e}
+.games button[aria-pressed="true"]{background:var(--y);color:var(--on-y)}
 
 /* ---------- main */
-main{padding-block:28px 56px}
-.head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:18px}
-.head h2{margin:0;font-family:var(--display);font-weight:800;font-size:34px;line-height:1;text-transform:uppercase;letter-spacing:.02em}
-.head p{margin:4px 0 0;color:var(--muted)}
-.head p b{color:var(--ink);font-variant-numeric:tabular-nums}
-.btn{border:0;border-radius:8px;padding:10px 18px;font-family:var(--display);font-weight:700;font-size:17px;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;background:var(--brand);color:var(--brand-ink)}
-.btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
-.btn.danger{background:transparent;color:var(--loss);border:1.5px solid var(--loss)}
+main{padding-block:34px 64px}
+.head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px;margin-bottom:22px}
+.head h2{margin:0;font-family:var(--display);font-style:italic;font-weight:900;font-size:48px;line-height:.9;text-transform:uppercase;letter-spacing:.005em;display:flex;align-items:center;gap:12px}
+.head h2::before{content:"";width:14px;height:34px;background:var(--y);transform:skewX(-14deg)}
+.record{margin:8px 0 0;display:flex;flex-wrap:wrap;align-items:baseline;gap:10px;font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.record b{font-style:italic;font-weight:900;font-size:26px;letter-spacing:.02em;color:var(--ink);font-variant-numeric:tabular-nums}
+.record b .w{color:var(--y)}
+
+.btn{border:0;padding:11px 22px;cursor:pointer;background:var(--y);color:var(--on-y);
+  font-family:var(--display);font-style:italic;font-weight:800;font-size:17px;letter-spacing:.06em;text-transform:uppercase;
+  clip-path:polygon(0 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%)}
+.btn:hover{background:#ffe14d}
+.btn.ghost{background:var(--panel-2);color:var(--ink)} .btn.ghost:hover{background:#2a2a2e}
+.btn.danger{background:transparent;color:var(--loss);box-shadow:inset 0 0 0 2px var(--loss)}
 .btn.danger.armed{background:var(--loss);color:#fff}
 .btn:disabled{opacity:.5;cursor:default}
 
-.note{background:var(--card);border:1px dashed var(--line);border-radius:10px;padding:10px 14px;margin-bottom:18px;color:var(--muted);font-size:14px}
-.note b{color:var(--ink)}
+.note{border:1px dashed var(--line);padding:10px 14px;margin-bottom:20px;color:var(--muted);font-size:14px;background:rgba(20,20,22,.7)}
+.note b{color:var(--y);font-weight:600}
 
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,330px),1fr));gap:18px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:20px}
 
 /* ---------- match card */
-.match{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;cursor:pointer;text-align:left;padding:0;transition:transform .15s ease, box-shadow .15s ease}
-.match:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.08)}
-.meta{display:flex;align-items:center;gap:8px;padding:14px 16px 0;font-size:13px;color:var(--muted)}
-.gamepill{font-family:var(--display);font-weight:700;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:#fff;border-radius:4px;padding:1px 8px}
-.meta .date{margin-left:auto;font-variant-numeric:tabular-nums;white-space:nowrap}
-.scoreline{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:10px;padding:14px 16px 6px}
+.match{position:relative;background:var(--panel);border:0;padding:0;text-align:left;display:flex;flex-direction:column;overflow:hidden;
+  clip-path:polygon(0 0,calc(100% - var(--cut)) 0,100% var(--cut),100% 100%,var(--cut) 100%,0 calc(100% - var(--cut)));
+  transition:transform .15s ease, background .15s ease}
+.match.can-edit{cursor:pointer}
+.match.can-edit:hover{transform:translateY(-3px);background:#18181b}
+.match::after{content:"";position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 0 1px var(--line)}
+.meta{display:flex;align-items:center;gap:10px;padding:16px 18px 0;font-size:13px;color:var(--muted);min-width:0}
+.gamepill{flex:none;font-family:var(--display);font-style:italic;font-weight:800;font-size:13px;letter-spacing:.08em;text-transform:uppercase;padding:2px 10px;
+  clip-path:polygon(6px 0,100% 0,calc(100% - 6px) 100%,0 100%)}
+.gamepill.smash{background:var(--y);color:var(--on-y)}
+.gamepill.sf{background:var(--ink);color:var(--on-y)}
+.meta .event{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--display);font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.meta .date{margin-left:auto;white-space:nowrap;font-variant-numeric:tabular-nums}
+
+.scoreline{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:12px;padding:18px 18px 8px}
 .team{min-width:0}
 .team.them{text-align:right}
-.team .name{font-family:var(--display);font-weight:700;font-size:18px;line-height:1.1;text-transform:uppercase;letter-spacing:.02em;overflow-wrap:anywhere}
-.team .player{font-size:13px;color:var(--muted);overflow-wrap:anywhere}
-.score{font-family:var(--display);font-weight:800;font-size:44px;line-height:1;font-variant-numeric:tabular-nums;white-space:nowrap}
-.score .sep{color:var(--muted);margin:0 4px}
-.score .lead{color:var(--ink)} .score .trail{color:var(--muted)}
-.result{display:flex;justify-content:center;padding:0 16px 10px}
-.result span{font-family:var(--display);font-weight:800;font-size:13px;letter-spacing:.12em;text-transform:uppercase;padding:2px 10px;border-radius:999px;border:1.5px solid currentColor}
-.result .W{color:var(--win)} .result .L{color:var(--loss)} .result .D{color:var(--draw)}
-.notes{padding:0 16px 14px;color:var(--muted);font-size:14px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.team .name{font-family:var(--display);font-style:italic;font-weight:800;font-size:19px;line-height:1.05;text-transform:uppercase;letter-spacing:.02em;overflow-wrap:anywhere}
+.team.us .name{color:var(--y)}
+.team .player{margin-top:3px;font-size:13px;color:var(--muted);overflow-wrap:anywhere}
+.score{font-family:var(--display);font-style:italic;font-weight:900;font-size:54px;line-height:.9;font-variant-numeric:tabular-nums;white-space:nowrap;letter-spacing:-.01em}
+.score .sep{color:var(--line);margin:0 6px}
+.score .dim{color:#55545a}
+.result{display:flex;justify-content:center;padding:4px 18px 16px}
+.result span{font-family:var(--display);font-style:italic;font-weight:900;font-size:14px;letter-spacing:.2em;text-transform:uppercase;padding:3px 14px 3px 16px;
+  clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%)}
+.result .W{background:var(--y);color:var(--on-y)}
+.result .L{background:var(--loss);color:#fff}
+.result .D{background:var(--ink);color:var(--on-y)}
 
-/* banner: matchup art */
-.banner{margin-top:auto;position:relative;aspect-ratio:16/7;max-width:100%;overflow:hidden;color:#fff;display:flex;align-items:flex-end}
-.banner .bg{position:absolute;inset:0;background:
-  repeating-linear-gradient(-55deg, rgba(255,255,255,.07) 0 14px, transparent 14px 28px),
-  linear-gradient(115deg, var(--g1) 0 50%, var(--g2) 50% 100%)}
+/* banner: matchup */
+.banner{margin-top:auto;position:relative;aspect-ratio:16/7;max-width:100%;overflow:hidden;display:flex;align-items:flex-end;border-top:2px solid var(--y)}
+.banner .bg{position:absolute;inset:0;background:#000}
+.banner.smash .bg{background:
+  repeating-linear-gradient(-50deg, rgba(255,212,0,.16) 0 16px, transparent 16px 40px),
+  radial-gradient(120% 140% at 85% 0%, rgba(255,212,0,.35), transparent 60%), #0d0d0e}
+.banner.sf .bg{background:
+  radial-gradient(rgba(255,212,0,.28) 1.4px, transparent 1.6px) 0 0/10px 10px,
+  linear-gradient(100deg, #0d0d0e 0 48%, transparent 48%),
+  linear-gradient(100deg, transparent 52%, rgba(255,212,0,.22) 52%), #0d0d0e}
 .banner img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.banner .shade{position:absolute;inset:0;background:linear-gradient(to top, rgba(0,0,0,.6), rgba(0,0,0,0) 65%)}
-.vsrow{position:relative;width:100%;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:end;gap:8px;padding:12px 16px}
-.vsrow .c{font-family:var(--display);font-weight:800;font-size:22px;line-height:1;text-transform:uppercase;letter-spacing:.02em;text-shadow:0 2px 8px rgba(0,0,0,.35);overflow-wrap:anywhere}
+.banner .shade{position:absolute;inset:0;background:linear-gradient(to top, rgba(0,0,0,.75), rgba(0,0,0,0) 70%)}
+.vsrow{position:relative;width:100%;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:end;gap:10px;padding:14px 18px}
+.vsrow .c{font-family:var(--display);font-style:italic;font-weight:900;font-size:26px;line-height:.95;text-transform:uppercase;letter-spacing:.01em;overflow-wrap:anywhere;text-shadow:0 2px 10px rgba(0,0,0,.6)}
 .vsrow .c.r{text-align:right}
-.vsrow .vs{font-family:var(--display);font-weight:800;font-size:15px;background:rgba(0,0,0,.45);border-radius:4px;padding:2px 7px}
-.vsrow .c small{display:block;font-family:var(--body);font-weight:500;font-size:11px;letter-spacing:.08em;opacity:.85;margin-bottom:3px}
+.vsrow .c small{display:block;font-family:var(--display);font-style:normal;font-weight:700;font-size:11px;letter-spacing:.18em;color:var(--y);margin-bottom:4px;text-shadow:none}
+.vsrow .vs{font-family:var(--display);font-style:italic;font-weight:900;font-size:16px;background:var(--y);color:var(--on-y);padding:2px 9px;clip-path:polygon(5px 0,100% 0,calc(100% - 5px) 100%,0 100%)}
 
-.empty{grid-column:1/-1;text-align:center;padding:48px 16px;color:var(--muted);background:var(--card);border:1px dashed var(--line);border-radius:12px}
-.empty h3{margin:0 0 6px;font-family:var(--display);font-size:24px;text-transform:uppercase;color:var(--ink)}
-.more{display:flex;justify-content:center;margin-top:22px}
+.empty{grid-column:1/-1;text-align:center;padding:56px 16px;color:var(--muted);border:1px dashed var(--line);background:rgba(20,20,22,.7)}
+.empty h3{margin:0 0 6px;font-family:var(--display);font-style:italic;font-weight:900;font-size:28px;text-transform:uppercase;color:var(--ink)}
+.empty p{margin:0}
+.more{display:flex;justify-content:center;margin-top:26px}
 
-footer{border-top:1px solid var(--line);padding-block:16px;color:var(--muted);font-size:13px}
+footer{border-top:1px solid var(--line);padding-block:18px;color:var(--muted);font-size:13px;background:#000}
 footer .wrap{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;justify-content:space-between}
-footer .links{display:flex;gap:14px}
-.linkbtn{background:none;border:0;padding:0;color:var(--muted);text-decoration:underline;cursor:pointer;font-size:13px}
+footer .brand{font-family:var(--display);font-weight:700;letter-spacing:.18em;text-transform:uppercase}
+footer .brand span{color:var(--y)}
+.linkbtn{background:none;border:0;padding:0;color:var(--muted);cursor:pointer;font-size:13px;text-decoration:underline;text-underline-offset:3px}
+.linkbtn:hover{color:var(--y)}
 
-/* ---------- dialog */
-dialog{border:0;border-radius:14px;padding:0;width:min(560px,calc(100vw - 32px));max-height:calc(100dvh - 32px);background:var(--card);color:var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.3)}
-dialog::backdrop{background:rgba(10,20,15,.55)}
-.dlg{display:grid;gap:16px;padding:22px}
-.dlg h3{margin:0;font-family:var(--display);font-size:26px;text-transform:uppercase;letter-spacing:.02em}
+/* ---------- dialogs */
+dialog{border:0;padding:0;width:min(580px,calc(100vw - 32px));max-height:calc(100dvh - 32px);background:var(--panel);color:var(--ink);
+  border-top:3px solid var(--y);box-shadow:0 30px 80px rgba(0,0,0,.7)}
+dialog::backdrop{background:rgba(0,0,0,.75)}
+.dlg{display:grid;gap:16px;padding:24px}
+.dlg h3{margin:0;font-family:var(--display);font-style:italic;font-weight:900;font-size:30px;line-height:1;text-transform:uppercase}
+.dlg p{margin:0;color:var(--muted);font-size:14px}
+.dlg ol{margin:0;padding-left:20px;color:var(--muted);font-size:14px;display:grid;gap:4px}
+.dlg a{color:var(--y)}
 .fields{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.field{display:grid;gap:4px;min-width:0}
+.field{display:grid;gap:5px;min-width:0}
 .field.full{grid-column:1/-1}
-.field span{font-size:13px;font-weight:600}
+.field > span{font-family:var(--display);font-weight:700;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
 .field small{font-size:12px;color:var(--muted)}
-.field input,.field select,.field textarea{border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:9px 10px;min-width:0;width:100%}
-.scorein{display:flex;align-items:center;gap:10px}
-.scorein input{width:5rem;text-align:center;font-family:var(--display);font-weight:800;font-size:26px;padding:4px}
-.scorein b{font-family:var(--display);font-size:22px;color:var(--muted)}
-.group{grid-column:1/-1;font-family:var(--display);font-weight:700;font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border-top:1px solid var(--line);padding-top:10px;margin-top:2px}
+.field input,.field select{border:1px solid var(--line);background:var(--bg);padding:10px 11px;min-width:0;width:100%;border-radius:0}
+.field input:focus,.field select:focus{border-color:var(--y);outline:none}
+.scorein{display:flex;align-items:center;gap:12px}
+.scorein input{width:5.5rem;text-align:center;font-family:var(--display);font-style:italic;font-weight:900;font-size:30px;padding:4px}
+.scorein b{font-family:var(--display);font-size:26px;color:var(--muted)}
+.group{grid-column:1/-1;font-family:var(--display);font-style:italic;font-weight:800;font-size:15px;letter-spacing:.12em;text-transform:uppercase;color:var(--y);border-top:1px solid var(--line);padding-top:12px;margin-top:2px}
 .dlg-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .dlg-actions .spacer{flex:1}
-.err{color:var(--loss);font-size:14px;min-height:1em}
-@media (max-width:480px){ .fields{grid-template-columns:1fr} .score{font-size:36px} .school h1{font-size:20px} }
-@media (prefers-reduced-motion: reduce){ .match{transition:none} .match:hover{transform:none} }
+.err{color:var(--loss);font-size:14px;min-height:1.2em}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--y);color:var(--on-y);padding:10px 18px;
+  font-family:var(--display);font-weight:700;letter-spacing:.06em;text-transform:uppercase;max-width:calc(100vw - 32px);z-index:10}
+.toast.bad{background:var(--loss);color:#fff}
+
+@media (max-width:560px){
+  .fields{grid-template-columns:1fr}
+  .school h1{font-size:24px}
+  .head h2{font-size:40px}
+  .score{font-size:46px}
+  .games{width:100%}
+  .games button{flex:1;padding:9px 10px;font-size:15px}
+}
+@media (prefers-reduced-motion: reduce){ .match,.games button{transition:none} .match.can-edit:hover{transform:none} }
 </style>
 </head>
 <body>
@@ -133,7 +176,7 @@ dialog::backdrop{background:rgba(10,20,15,.55)}
   <div class="wrap">
     <div class="school">
       <div class="crest" aria-hidden="true">CG</div>
-      <div><h1>Cedar Grove High School Esports</h1><small>Match results</small></div>
+      <div><h1>Cedar Grove <span>Esports</span></h1><small>Cedar Grove High School</small></div>
     </div>
     <nav class="games" aria-label="Filter by game" id="gameTabs">
       <button type="button" data-game="" aria-pressed="true">All</button>
@@ -147,28 +190,28 @@ dialog::backdrop{background:rgba(10,20,15,.55)}
   <div class="head">
     <div>
       <h2>Recent</h2>
-      <p id="record">&nbsp;</p>
+      <p class="record" id="record">Loading results…</p>
     </div>
-    <button class="btn" type="button" id="addBtn">+ Add match</button>
+    <button class="btn" type="button" id="addBtn" hidden>+ Add match</button>
   </div>
-  <div class="note" id="exampleNote" hidden><b>These are example matches.</b> They show how results look and disappear once you add your first real match.</div>
+  <div class="note" id="exampleNote" hidden><b>Example matches.</b> No results have been posted yet. These samples show what match cards look like.</div>
   <div class="grid" id="grid"></div>
   <div class="more"><button class="btn ghost" type="button" id="moreBtn" hidden>Show more</button></div>
 </main>
 
 <footer>
   <div class="wrap">
-    <span>Matches are saved in this browser.</span>
-    <div class="links">
-      <button class="linkbtn" type="button" id="exportBtn">Export matches</button>
-      <label class="linkbtn" for="importFile">Import matches</label>
-      <input type="file" id="importFile" accept=".json,application/json" hidden>
-    </div>
+    <span class="brand">Cedar Grove <span>Esports</span></span>
+    <span>
+      <button class="linkbtn" type="button" id="loginBtn">Team sign-in</button>
+      <button class="linkbtn" type="button" id="logoutBtn" hidden>Sign out</button>
+    </span>
   </div>
 </footer>
 
+<!-- add / edit match -->
 <dialog id="dlg">
-  <form class="dlg" id="form" method="dialog" autocomplete="off">
+  <form class="dlg" id="form" autocomplete="off">
     <h3 id="dlgTitle">Add match</h3>
     <div class="fields">
       <label class="field"><span>Game</span>
@@ -192,9 +235,8 @@ dialog::backdrop{background:rgba(10,20,15,.55)}
       <label class="field"><span>Their player</span><input id="fOppPlayer" placeholder="Gamertag"></label>
       <label class="field"><span>Their character</span><input id="fOppChar" list="charList" placeholder="e.g. Marth"></label>
 
-      <div class="group">Extras</div>
-      <label class="field full"><span>Picture link <small>(optional)</small></span><input id="fImg" type="url" placeholder="https://… screenshot or team photo"><small>Paste a link to an image. Without one, the card shows the character matchup.</small></label>
-      <label class="field full"><span>Notes</span><textarea id="fNotes" rows="2" placeholder="Highlights, key moments…"></textarea></label>
+      <div class="group">Picture</div>
+      <label class="field full"><span>Picture link (optional)</span><input id="fImg" type="url" placeholder="https://… screenshot or team photo"><small>Without one, the card shows the character matchup.</small></label>
     </div>
     <div class="err" id="err" role="alert"></div>
     <div class="dlg-actions">
@@ -206,58 +248,135 @@ dialog::backdrop{background:rgba(10,20,15,.55)}
   </form>
 </dialog>
 
+<!-- team sign-in -->
+<dialog id="loginDlg">
+  <form class="dlg" id="loginForm" autocomplete="off">
+    <h3>Team sign-in</h3>
+    <p>Team members post results by saving them to the site's GitHub repository. You need a GitHub access key with permission to edit it.</p>
+    <ol>
+      <li>Open <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">GitHub → new fine-grained token</a>.</li>
+      <li>Under <b>Repository access</b>, pick only <b>CedarGroveEsportsStats</b>.</li>
+      <li>Under <b>Permissions → Contents</b>, choose <b>Read and write</b>. Generate it and paste it below.</li>
+    </ol>
+    <label class="field full"><span>Access key</span><input id="fToken" type="password" placeholder="github_pat_…" required></label>
+    <p>The key stays in this browser only. Sign out on shared computers.</p>
+    <div class="err" id="loginErr" role="alert"></div>
+    <div class="dlg-actions">
+      <span class="spacer"></span>
+      <button class="btn ghost" type="button" id="loginCancel">Cancel</button>
+      <button class="btn" type="submit" id="loginSubmit">Sign in</button>
+    </div>
+  </form>
+</dialog>
+
 <datalist id="oppList"></datalist><datalist id="eventList"></datalist><datalist id="playerList"></datalist><datalist id="charList"></datalist>
 
 <script>
 (function(){
   const $ = s => document.querySelector(s);
   const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-  const KEY = "cedargrove-matches-v2";
+
+  // Where results live. Everyone reads matches.json; signed-in team members write it through the GitHub API.
+  const REPO = "Kerem-Orhan/CedarGroveEsportsStats", BRANCH = "main", FILE = "matches.json";
+  const API = `https://api.github.com/repos/${REPO}/contents/${FILE}`;
+  const TOKEN_KEY = "cg-token", TAB_KEY = "cg-tab";
   const PAGE = 12;
 
   const GAMES = {
-    "Smash Bros": {color:"var(--smash)", g1:"var(--smash)", g2:"var(--smash-2)",
-      chars:["Mario","Donkey Kong","Link","Samus","Yoshi","Kirby","Fox","Pikachu","Luigi","Ness","Captain Falcon","Jigglypuff","Peach","Bowser","Ice Climbers","Sheik","Zelda","Pichu","Falco","Marth","Lucina","Young Link","Ganondorf","Mewtwo","Roy","Chrom","Mr. Game & Watch","Meta Knight","Pit","Zero Suit Samus","Wario","Snake","Ike","Pokémon Trainer","Diddy Kong","Lucas","Sonic","King Dedede","Olimar","Lucario","R.O.B.","Toon Link","Wolf","Villager","Mega Man","Wii Fit Trainer","Rosalina & Luma","Little Mac","Greninja","Palutena","Pac-Man","Robin","Shulk","Bowser Jr.","Duck Hunt","Ryu","Ken","Cloud","Corrin","Bayonetta","Inkling","Ridley","Simon","Richter","King K. Rool","Isabelle","Incineroar","Piranha Plant","Joker","Hero","Banjo & Kazooie","Terry","Byleth","Min Min","Steve","Sephiroth","Pyra & Mythra","Kazuya","Sora"]},
-    "Street Fighter": {color:"var(--sf)", g1:"var(--sf)", g2:"var(--sf-2)",
+    "Smash Bros": {cls:"smash",
+      chars:["Mario","Donkey Kong","Link","Samus","Dark Samus","Yoshi","Kirby","Fox","Pikachu","Luigi","Ness","Captain Falcon","Jigglypuff","Peach","Daisy","Bowser","Ice Climbers","Sheik","Zelda","Dr. Mario","Pichu","Falco","Marth","Lucina","Young Link","Ganondorf","Mewtwo","Roy","Chrom","Mr. Game & Watch","Meta Knight","Pit","Dark Pit","Zero Suit Samus","Wario","Snake","Ike","Pokémon Trainer","Diddy Kong","Lucas","Sonic","King Dedede","Olimar","Lucario","R.O.B.","Toon Link","Wolf","Villager","Mega Man","Wii Fit Trainer","Rosalina & Luma","Little Mac","Greninja","Mii Brawler","Mii Swordfighter","Mii Gunner","Palutena","Pac-Man","Robin","Shulk","Bowser Jr.","Duck Hunt","Ryu","Ken","Cloud","Corrin","Bayonetta","Inkling","Ridley","Simon","Richter","King K. Rool","Isabelle","Incineroar","Piranha Plant","Joker","Hero","Banjo & Kazooie","Terry","Byleth","Min Min","Steve","Sephiroth","Pyra & Mythra","Kazuya","Sora"]},
+    "Street Fighter": {cls:"sf",
       chars:["Ryu","Ken","Chun-Li","Guile","Luke","Jamie","Kimberly","Juri","Cammy","Dee Jay","Manon","Marisa","JP","Zangief","Lily","Dhalsim","E. Honda","Blanka","Rashid","A.K.I.","Ed","Akuma","M. Bison","Terry","Mai","Elena"]}
   };
-  const gameInfo = g => GAMES[g] || {color:"var(--other)", g1:"var(--other)", g2:"var(--other-2)", chars:[]};
+  const gameInfo = g => GAMES[g] || {cls:"smash", chars:[]};
 
-  // Shown only while no real matches exist. Never saved.
+  // Shown only while matches.json is empty. Never saved.
   const EXAMPLES = [
-    {id:"ex1",game:"Smash Bros",date:"2026-10-14",opponent:"Westfield High",event:"PlayVS Week 4",us:2,them:3,player:"Kerem",char:"Fox",oppPlayer:"Blaze",oppChar:"Marth",notes:"Went to game 5. Lost last stock on Battlefield."},
-    {id:"ex2",game:"Street Fighter",date:"2026-10-12",opponent:"Lakeview Academy",event:"Scrim",us:3,them:1,player:"Dani",char:"Ken",oppPlayer:"Vex",oppChar:"Juri",notes:"Drive Rush pressure won the set."},
-    {id:"ex3",game:"Smash Bros",date:"2026-10-07",opponent:"North Ridge High",event:"PlayVS Week 3",us:3,them:0,player:"Kerem",char:"Fox",oppPlayer:"Tide",oppChar:"Pikachu",notes:""},
+    {id:"ex1",game:"Smash Bros",date:"2026-10-14",opponent:"Westfield High",event:"PlayVS Week 4",us:2,them:3,player:"Kerem",char:"Fox",oppPlayer:"Blaze",oppChar:"Marth"},
+    {id:"ex2",game:"Street Fighter",date:"2026-10-12",opponent:"Lakeview Academy",event:"Scrim",us:3,them:1,player:"Dani",char:"Ken",oppPlayer:"Vex",oppChar:"Juri"},
+    {id:"ex3",game:"Smash Bros",date:"2026-10-07",opponent:"North Ridge High",event:"PlayVS Week 3",us:3,them:0,player:"Kerem",char:"Fox",oppPlayer:"Tide",oppChar:"Pikachu"},
   ];
 
-  let matches = [], filter = "", shown = PAGE, editingId = null, storageOK = true;
+  let matches = [], loaded = false, filter = "", shown = PAGE, editingId = null;
+  let token = null, sha = null;
 
-  function load(){ try{ const v = JSON.parse(localStorage.getItem(KEY) || "[]"); return Array.isArray(v) ? v : []; }catch(e){ storageOK = false; return []; } }
-  function save(){ try{ localStorage.setItem(KEY, JSON.stringify(matches)); return true; }catch(e){ return false; } }
   const resultOf = m => m.us > m.them ? "W" : m.us < m.them ? "L" : "D";
   const byDate = (a,b) => (b.date||"").localeCompare(a.date||"") || (b.createdAt||0) - (a.createdAt||0);
   const fmtDate = d => { if(!d) return ""; const t = new Date(d+"T12:00:00"); return isNaN(t) ? d : t.toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"}); };
   const today = () => { const d = new Date(); return new Date(d - d.getTimezoneOffset()*60000).toISOString().slice(0,10); };
-  const safeUrl = u => /^https:\/\/[^\s"'<>]+$/i.test(u||"") ? u : "";
+  const safeUrl = u => /^https:\/\/[^\s"'<>()]+$/i.test(u||"") ? u : "";
+  const str = (v,n) => String(v ?? "").slice(0,n);
+  function clean(m){
+    return {id:str(m.id,40), game:str(m.game,40), date:str(m.date,10), opponent:str(m.opponent,60), event:str(m.event,60),
+      us:Math.max(0,parseInt(m.us,10)||0), them:Math.max(0,parseInt(m.them,10)||0),
+      player:str(m.player,40), char:str(m.char,40), oppPlayer:str(m.oppPlayer,40), oppChar:str(m.oppChar,40),
+      image:safeUrl(m.image), createdAt:+m.createdAt||0};
+  }
+
+  let toastTimer;
+  function toast(msg, bad){
+    let t = $(".toast"); if (!t){ t = document.createElement("div"); t.className = "toast"; t.setAttribute("role","status"); document.body.appendChild(t); }
+    t.textContent = msg; t.classList.toggle("bad", !!bad); t.hidden = false;
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => t.hidden = true, 3500);
+  }
+
+  // ---------- GitHub storage
+  const b64encode = s => { const bytes = new TextEncoder().encode(s); let bin = ""; for (const b of bytes) bin += String.fromCharCode(b); return btoa(bin); };
+  const b64decode = s => new TextDecoder().decode(Uint8Array.from(atob(s.replace(/\s/g,"")), c => c.charCodeAt(0)));
+  const ghHeaders = () => ({"Accept":"application/vnd.github+json","Authorization":"Bearer "+token,"X-GitHub-Api-Version":"2022-11-28"});
+
+  async function readPublic(){
+    const r = await fetch(`${FILE}?t=${Date.now()}`, {cache:"no-store"});
+    if (r.status === 404) return [];
+    if (!r.ok) throw new Error("read");
+    const data = await r.json();
+    return Array.isArray(data) ? data : [];
+  }
+  async function readGitHub(){
+    const r = await fetch(`${API}?ref=${BRANCH}&t=${Date.now()}`, {headers:ghHeaders(), cache:"no-store"});
+    if (r.status === 404){ sha = null; return []; }
+    if (r.status === 401 || r.status === 403) throw new Error("auth");
+    if (!r.ok) throw new Error("read");
+    const j = await r.json(); sha = j.sha;
+    const data = JSON.parse(b64decode(j.content) || "[]");
+    return Array.isArray(data) ? data : [];
+  }
+  async function writeGitHub(next, message){
+    const body = {message, branch:BRANCH, content:b64encode(JSON.stringify(next.slice().sort(byDate), null, 2) + "\n")};
+    if (sha) body.sha = sha;
+    const r = await fetch(API, {method:"PUT", headers:{...ghHeaders(),"Content-Type":"application/json"}, body:JSON.stringify(body)});
+    if (r.status === 409 || r.status === 422) throw new Error("conflict");
+    if (r.status === 401 || r.status === 403 || r.status === 404) throw new Error("auth");
+    if (!r.ok) throw new Error("write");
+    const j = await r.json(); sha = j.content.sha;
+  }
+  // Re-read the latest file, apply the change, write it back. Retries once if someone else saved in between.
+  async function commit(change, message){
+    for (let attempt = 0; attempt < 2; attempt++){
+      const latest = (await readGitHub()).map(clean);
+      const next = change(latest);
+      try{ await writeGitHub(next, message); matches = next; return; }
+      catch(e){ if (e.message !== "conflict" || attempt) throw e; }
+    }
+  }
 
   // ---------- render
   function card(m){
     const g = gameInfo(m.game), r = resultOf(m);
     const img = safeUrl(m.image);
-    const usLead = m.us >= m.them;
     const label = r==="W" ? "Win" : r==="L" ? "Loss" : "Draw";
-    return `<button type="button" class="match" data-id="${esc(m.id)}" aria-label="${esc(label)} against ${esc(m.opponent)}, ${m.us} to ${m.them}. Open to edit.">
-      <div class="meta"><span class="gamepill" style="background:${g.color}">${esc(m.game)}</span><span>${esc(m.event||"")}</span><span class="date">${esc(fmtDate(m.date))}</span></div>
+    const tag = token ? "button" : "article";
+    return `<${tag} ${token?'type="button" ':""}class="match${token?" can-edit":""}" data-id="${esc(m.id)}" aria-label="${esc(label)} against ${esc(m.opponent)}, ${m.us} to ${m.them}${token?". Open to edit":""}">
+      <div class="meta"><span class="gamepill ${g.cls}">${esc(m.game)}</span><span class="event">${esc(m.event||"")}</span><span class="date">${esc(fmtDate(m.date))}</span></div>
       <div class="scoreline">
-        <div class="team"><div class="name">Cedar Grove</div>${m.player?`<div class="player">${esc(m.player)}</div>`:""}</div>
-        <div class="score"><span class="${usLead?"lead":"trail"}">${m.us}</span><span class="sep">:</span><span class="${usLead&&m.us!==m.them?"trail":"lead"}">${m.them}</span></div>
+        <div class="team us"><div class="name">Cedar Grove</div>${m.player?`<div class="player">${esc(m.player)}</div>`:""}</div>
+        <div class="score"><span class="${m.us<m.them?"dim":""}">${m.us}</span><span class="sep">:</span><span class="${m.them<m.us?"dim":""}">${m.them}</span></div>
         <div class="team them"><div class="name">${esc(m.opponent)}</div>${m.oppPlayer?`<div class="player">${esc(m.oppPlayer)}</div>`:""}</div>
       </div>
       <div class="result"><span class="${r}">${label}</span></div>
-      ${m.notes?`<div class="notes">${esc(m.notes)}</div>`:""}
-      <div class="banner" style="--g1:${g.g1};--g2:${g.g2}">
+      <div class="banner ${g.cls}">
         <div class="bg"></div>
-        ${img?`<img src="${esc(img)}" alt="" loading="lazy" onerror="this.remove()">`:""}
+        ${img?`<img src="${esc(img)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">`:""}
         <div class="shade"></div>
         <div class="vsrow">
           <div class="c"><small>Cedar Grove</small>${esc(m.char||"—")}</div>
@@ -265,39 +384,42 @@ dialog::backdrop{background:rgba(10,20,15,.55)}
           <div class="c r"><small>${esc(m.opponent)}</small>${esc(m.oppChar||"—")}</div>
         </div>
       </div>
-    </button>`;
+    </${tag}>`;
   }
 
   function render(){
+    if (!loaded) return;
     const examples = matches.length === 0;
     const src = (examples ? EXAMPLES : matches).filter(m => !filter || m.game === filter).sort(byDate);
     $("#exampleNote").hidden = !examples;
+    $("#addBtn").hidden = !token;
 
     const W = src.filter(m=>resultOf(m)==="W").length, L = src.filter(m=>resultOf(m)==="L").length;
     $("#record").innerHTML = src.length
-      ? `${filter ? esc(filter) : "All games"} · <b>${W}–${L}</b> record${examples ? " (examples)" : ""}`
-      : "&nbsp;";
+      ? `<span>${esc(filter || "All games")}</span><b><span class="w">${W}</span>–${L}</b><span>Record</span>`
+      : `<span>${esc(filter || "All games")}</span>`;
 
     const grid = $("#grid");
-    if (!src.length){
-      grid.innerHTML = `<div class="empty"><h3>No ${esc(filter)} matches yet</h3><p>Add a match and it will show up here.</p></div>`;
-    } else {
-      grid.innerHTML = src.slice(0, shown).map(card).join("");
-    }
+    grid.innerHTML = src.length
+      ? src.slice(0, shown).map(card).join("")
+      : `<div class="empty"><h3>No ${esc(filter)} matches yet</h3><p>Results will show up here once they're posted.</p></div>`;
     $("#moreBtn").hidden = src.length <= shown;
   }
 
   // ---------- tabs
+  function setTab(g){
+    filter = g; shown = PAGE;
+    for (const x of $("#gameTabs").querySelectorAll("button")) x.setAttribute("aria-pressed", String(x.dataset.game === g));
+  }
   $("#gameTabs").addEventListener("click", e => {
     const b = e.target.closest("button[data-game]"); if (!b) return;
-    filter = b.dataset.game; shown = PAGE;
-    for (const x of $("#gameTabs").querySelectorAll("button")) x.setAttribute("aria-pressed", String(x===b));
-    try{ localStorage.setItem(KEY+"-tab", filter); }catch(e){}
+    setTab(b.dataset.game);
+    try{ localStorage.setItem(TAB_KEY, filter); }catch(e){}
     render();
   });
   $("#moreBtn").addEventListener("click", () => { shown += PAGE; render(); });
 
-  // ---------- dialog
+  // ---------- add / edit dialog
   const dlg = $("#dlg");
   function fillLists(game){
     const uniq = a => [...new Set(a.filter(Boolean))].sort((x,y)=>x.localeCompare(y));
@@ -324,9 +446,9 @@ dialog::backdrop{background:rgba(10,20,15,.55)}
     $("#fOppPlayer").value = m?.oppPlayer || "";
     $("#fOppChar").value = m?.oppChar || "";
     $("#fImg").value = m?.image || "";
-    $("#fNotes").value = m?.notes || "";
     $("#err").textContent = "";
     $("#delBtn").hidden = !m; disarm();
+    $("#saveBtn").disabled = false; $("#saveBtn").textContent = "Save";
     fillLists($("#fGame").value);
     dlg.showModal();
     $("#fOpp").focus();
@@ -336,74 +458,108 @@ dialog::backdrop{background:rgba(10,20,15,.55)}
   dlg.addEventListener("click", e => { if (e.target === dlg) dlg.close(); });
 
   $("#grid").addEventListener("click", e => {
+    if (!token) return;
     const c = e.target.closest(".match"); if (!c) return;
     const id = c.dataset.id;
-    if (id.startsWith("ex")){ openDialog(null); const ex = EXAMPLES.find(x=>x.id===id); if (ex) $("#fGame").value = ex.game; fillLists(ex.game); return; }
+    if (id.startsWith("ex")) return openDialog(null);
     const m = matches.find(x=>x.id===id); if (m) openDialog(m);
   });
 
-  $("#form").addEventListener("submit", e => {
+  function saveError(e){
+    return e.message === "auth" ? "GitHub refused the save. Your access key may be expired or missing write access. Sign out and sign in again."
+         : e.message === "conflict" ? "Someone else saved at the same moment. Try again."
+         : "Couldn't reach GitHub. Check your connection and try again.";
+  }
+
+  $("#form").addEventListener("submit", async e => {
     e.preventDefault();
     const us = parseInt($("#fUs").value,10), them = parseInt($("#fThem").value,10);
-    const opp = $("#fOpp").value.trim();
-    const img = $("#fImg").value.trim();
+    const opp = $("#fOpp").value.trim(), img = $("#fImg").value.trim();
     if (!opp){ $("#err").textContent = "Add the opponent's name."; return; }
     if (!Number.isFinite(us) || !Number.isFinite(them) || us < 0 || them < 0){ $("#err").textContent = "Enter both scores as whole numbers."; return; }
     if (img && !safeUrl(img)){ $("#err").textContent = "The picture link must start with https://"; return; }
     const prev = editingId && matches.find(m=>m.id===editingId);
-    const rec = {
+    const rec = clean({
       id: editingId || "m" + Date.now().toString(36) + Math.random().toString(36).slice(2,6),
-      game: $("#fGame").value, date: $("#fDate").value || today(),
-      opponent: opp.slice(0,60), event: $("#fEvent").value.trim().slice(0,60),
-      us, them,
-      player: $("#fPlayer").value.trim().slice(0,40), char: $("#fChar").value.trim().slice(0,40),
-      oppPlayer: $("#fOppPlayer").value.trim().slice(0,40), oppChar: $("#fOppChar").value.trim().slice(0,40),
-      image: img, notes: $("#fNotes").value.trim().slice(0,1000),
-      createdAt: prev?.createdAt || Date.now(),
-    };
-    const before = matches;
-    matches = editingId ? matches.map(m => m.id===editingId ? rec : m) : [...matches, rec];
-    if (!save()){ matches = before; $("#err").textContent = "This browser blocked saving (private mode or blocked site data)."; return; }
-    dlg.close(); render();
+      game: $("#fGame").value, date: $("#fDate").value || today(), opponent: opp, event: $("#fEvent").value.trim(),
+      us, them, player: $("#fPlayer").value.trim(), char: $("#fChar").value.trim(),
+      oppPlayer: $("#fOppPlayer").value.trim(), oppChar: $("#fOppChar").value.trim(),
+      image: img, createdAt: prev?.createdAt || Date.now(),
+    });
+    const id = editingId;
+    $("#saveBtn").disabled = true; $("#saveBtn").textContent = "Saving…"; $("#err").textContent = "";
+    try{
+      await commit(list => id ? list.map(m => m.id===id ? rec : m) : [...list, rec],
+        `${id?"Update":"Add"} ${rec.game} match vs ${rec.opponent} (${rec.us}-${rec.them})`);
+      dlg.close(); render(); toast(id ? "Match updated" : "Match posted");
+    }catch(err){ $("#err").textContent = saveError(err); }
+    finally{ $("#saveBtn").disabled = false; $("#saveBtn").textContent = "Save"; }
   });
 
   let armTimer;
-  function disarm(){ const b = $("#delBtn"); b.classList.remove("armed"); b.textContent = "Delete"; clearTimeout(armTimer); }
-  $("#delBtn").addEventListener("click", () => {
+  function disarm(){ const b = $("#delBtn"); b.classList.remove("armed"); b.textContent = "Delete"; b.disabled = false; clearTimeout(armTimer); }
+  $("#delBtn").addEventListener("click", async () => {
     const b = $("#delBtn");
     if (!b.classList.contains("armed")){ b.classList.add("armed"); b.textContent = "Click again to delete"; armTimer = setTimeout(disarm, 4000); return; }
-    matches = matches.filter(m => m.id !== editingId); save(); dlg.close(); render();
+    clearTimeout(armTimer);
+    const id = editingId, m = matches.find(x=>x.id===id);
+    b.disabled = true; b.textContent = "Deleting…";
+    try{
+      await commit(list => list.filter(x => x.id !== id), `Delete match vs ${m?.opponent || "opponent"}`);
+      dlg.close(); render(); toast("Match deleted");
+    }catch(err){ $("#err").textContent = saveError(err); disarm(); }
   });
 
-  // ---------- export / import
-  $("#exportBtn").addEventListener("click", () => {
-    const blob = new Blob([JSON.stringify(matches.slice().sort(byDate), null, 2)], {type:"application/json"});
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob); a.download = `cedar-grove-matches-${today()}.json`;
-    document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
-  });
-  $("#importFile").addEventListener("change", async e => {
-    const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  // ---------- team sign-in
+  const loginDlg = $("#loginDlg");
+  $("#loginBtn").addEventListener("click", () => { $("#fToken").value = ""; $("#loginErr").textContent = ""; loginDlg.showModal(); $("#fToken").focus(); });
+  $("#loginCancel").addEventListener("click", () => loginDlg.close());
+  loginDlg.addEventListener("click", e => { if (e.target === loginDlg) loginDlg.close(); });
+  $("#loginForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const t = $("#fToken").value.trim(); if (!t) return;
+    const btn = $("#loginSubmit"); btn.disabled = true; btn.textContent = "Checking…"; $("#loginErr").textContent = "";
     try{
-      const data = JSON.parse(await f.text()); if (!Array.isArray(data)) throw 0;
-      const map = new Map(matches.map(m=>[m.id,m]));
-      const str = (v,n) => String(v ?? "").slice(0,n);
-      for (const m of data){
-        if (!m || !m.opponent || !Number.isFinite(+m.us) || !Number.isFinite(+m.them)) continue;
-        const id = str(m.id,40) || "m" + Math.random().toString(36).slice(2,10);
-        map.set(id, {id, game:str(m.game,40), date:str(m.date,10), opponent:str(m.opponent,60), event:str(m.event,60), us:+m.us, them:+m.them,
-          player:str(m.player,40), char:str(m.char,40), oppPlayer:str(m.oppPlayer,40), oppChar:str(m.oppChar,40),
-          image:safeUrl(m.image), notes:str(m.notes,1000), createdAt:+m.createdAt||0});
-      }
-      matches = [...map.values()]; save(); render();
-    }catch(err){ /* not a valid export; ignore */ }
+      const r = await fetch(`https://api.github.com/repos/${REPO}`, {headers:{"Accept":"application/vnd.github+json","Authorization":"Bearer "+t}});
+      if (!r.ok) throw new Error("auth");
+      const repo = await r.json();
+      if (!repo.permissions || !repo.permissions.push) throw new Error("perm");
+      token = t;
+      try{ localStorage.setItem(TOKEN_KEY, t); }catch(e){}
+      matches = (await readGitHub()).map(clean);
+      loginDlg.close(); syncAuthUI(); render(); toast("Signed in. You can now add and edit matches.");
+    }catch(err){
+      token = null;
+      $("#loginErr").textContent = err.message === "perm"
+        ? "That key can read the repository but can't edit it. Give it Contents: Read and write."
+        : "GitHub didn't accept that key. Check that you copied all of it and that it has access to CedarGroveEsportsStats.";
+    }finally{ btn.disabled = false; btn.textContent = "Sign in"; }
   });
+  $("#logoutBtn").addEventListener("click", () => {
+    token = null; sha = null;
+    try{ localStorage.removeItem(TOKEN_KEY); }catch(e){}
+    syncAuthUI(); render(); toast("Signed out");
+  });
+  function syncAuthUI(){ $("#loginBtn").hidden = !!token; $("#logoutBtn").hidden = !token; }
 
   // ---------- boot
-  matches = load();
-  try{ const t = localStorage.getItem(KEY+"-tab"); if (t !== null && (t==="" || GAMES[t])){ filter = t; for (const x of $("#gameTabs").querySelectorAll("button")) x.setAttribute("aria-pressed", String(x.dataset.game===t)); } }catch(e){}
-  render();
+  try{ const t = localStorage.getItem(TAB_KEY); if (t === "" || GAMES[t]) setTab(t); }catch(e){}
+  try{ token = localStorage.getItem(TOKEN_KEY) || null; }catch(e){}
+  syncAuthUI();
+  (async () => {
+    try{
+      if (token){
+        try{ matches = (await readGitHub()).map(clean); }
+        catch(e){ if (e.message === "auth"){ token = null; try{localStorage.removeItem(TOKEN_KEY)}catch(_){} syncAuthUI(); toast("Your sign-in expired. Sign in again to post results.", true); } matches = (await readPublic()).map(clean); }
+      } else matches = (await readPublic()).map(clean);
+    }catch(e){
+      matches = []; loaded = true;
+      $("#record").textContent = "Couldn't load results. Refresh to try again.";
+      $("#grid").innerHTML = "";
+      return;
+    }
+    loaded = true; render();
+  })();
 })();
 </script>
 </body>

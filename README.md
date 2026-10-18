@@ -1,14 +1,22 @@
 # Cedar Grove Esports Stats
 
-Match results for the Cedar Grove High School esports team (Smash Bros and Street Fighter).
+Public match results for the Cedar Grove High School esports team (Smash Bros and Street Fighter).
 
-- Switch between **All**, **Smash Bros** and **Street Fighter** at the top
-- **Recent** shows each match as a card: final score, win/loss, players, and the character matchup
-- **+ Add match** to log a result; click any card to edit or delete it
-- Add a picture to a card by pasting an image link (https://…)
+Anyone can open the site to see recent results. Team members sign in to post, edit or delete matches.
 
-## Using it
+## Turning the site on
 
-Turn on GitHub Pages (Settings → Pages → Deploy from a branch → `main` / root) and open the link it gives you.
+Settings → Pages → Deploy from a branch → `main` / root. The site is then at
+https://kerem-orhan.github.io/CedarGroveEsportsStats/
 
-Matches are saved in the browser you enter them in. To share them, use **Export matches** at the bottom of the page and have teammates use **Import matches**.
+## Posting results (team only)
+
+1. Click **Team sign-in** at the bottom of the site.
+2. Make a GitHub fine-grained token: https://github.com/settings/personal-access-tokens/new
+   - Repository access: only `CedarGroveEsportsStats`
+   - Permissions → Contents: **Read and write**
+3. Paste it in. **+ Add match** appears, and you can click any card to edit or delete it.
+
+Each team member needs to be a collaborator on the repo (Settings → Collaborators) to make their own token.
+
+Results are saved in `matches.json` in this repo. After a save, GitHub Pages can take a minute or two to show the change to visitors.
