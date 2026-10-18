@@ -34,7 +34,7 @@ function clean(m) {
   const rounds = (Array.isArray(m.rounds) ? m.rounds : []).slice(0, 3).map((r) => ({
     map: str(r && r.map, 40),
     players: (Array.isArray(r && r.players) ? r.players : []).slice(0, 6).map((p) => ({
-      name: str(p && p.name, 40), us: num(p && p.us), them: num(p && p.them),
+      name: str(p && p.name, 40), char: str(p && p.char, 40), us: num(p && p.us), them: num(p && p.them),
     })),
   }));
   const game = GAMES.includes(m.game) ? m.game : "";

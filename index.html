@@ -227,6 +227,8 @@ dialog.editor{width:min(760px,calc(100vw - 24px))}
 .prow.cols .us{color:var(--y)}
 .pname{background:transparent;border:0;border-bottom:1px solid var(--line);padding:8px 2px;min-width:0;width:100%;border-radius:0;font-weight:600}
 .pname:focus{outline:none;border-bottom-color:var(--y)}
+.pwho{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;min-width:0}
+.pchar{font-weight:500;color:#c9c9cf}
 .step{display:inline-flex;align-items:stretch;border:1px solid var(--line);background:var(--card)}
 .step button{width:34px;border:0;background:transparent;color:var(--muted);font-size:18px;line-height:1;cursor:pointer;padding:0}
 .step button:hover{color:var(--ink);background:var(--card-2)}
@@ -250,6 +252,8 @@ dialog.editor{width:min(760px,calc(100vw - 24px))}
   .ed-board .big{font-size:36px}
   .ed-board .tn{font-size:16px}
   .prow{gap:6px;grid-template-columns:minmax(0,1fr) auto auto 22px}
+  .pwho{grid-template-columns:minmax(0,1fr);gap:0}
+  .pchar{font-size:13px;padding-top:4px}
   .step button{width:28px}
   .step output{min-width:30px;font-size:18px}
   .rsum{margin-left:0;width:100%;justify-content:space-between}
@@ -341,7 +345,7 @@ dialog.editor{width:min(760px,calc(100vw - 24px))}
   </div>
 </dialog>
 
-<datalist id="oppList"></datalist><datalist id="eventList"></datalist><datalist id="playerList"></datalist>
+<datalist id="oppList"></datalist><datalist id="eventList"></datalist><datalist id="playerList"></datalist><datalist id="charList"></datalist>
 
 <script>
 (function(){
@@ -358,12 +362,14 @@ dialog.editor{width:min(760px,calc(100vw - 24px))}
   const STARTERS = ["Battlefield","Small Battlefield","Hollow Bastion","Pokémon Stadium 2","Smashville"];
   const ALL_MAPS = [...STARTERS, "Final Destination", "Kalos Pokémon League"];
   const GAMES = {
-    "Smash Bros": {cls:"smash", maps:i => i === 0 ? STARTERS : ALL_MAPS},
-    "Street Fighter": {cls:"sf", maps:null},
+    "Smash Bros": {cls:"smash", maps:i => i === 0 ? STARTERS : ALL_MAPS,
+      chars:["Mario","Donkey Kong","Link","Samus","Dark Samus","Yoshi","Kirby","Fox","Pikachu","Luigi","Ness","Captain Falcon","Jigglypuff","Peach","Daisy","Bowser","Ice Climbers","Sheik","Zelda","Dr. Mario","Pichu","Falco","Marth","Lucina","Young Link","Ganondorf","Mewtwo","Roy","Chrom","Mr. Game & Watch","Meta Knight","Pit","Dark Pit","Zero Suit Samus","Wario","Snake","Ike","Pokémon Trainer","Diddy Kong","Lucas","Sonic","King Dedede","Olimar","Lucario","R.O.B.","Toon Link","Wolf","Villager","Mega Man","Wii Fit Trainer","Rosalina & Luma","Little Mac","Greninja","Mii Brawler","Mii Swordfighter","Mii Gunner","Palutena","Pac-Man","Robin","Shulk","Bowser Jr.","Duck Hunt","Ryu","Ken","Cloud","Corrin","Bayonetta","Inkling","Ridley","Simon","Richter","King K. Rool","Isabelle","Incineroar","Piranha Plant","Joker","Hero","Banjo & Kazooie","Terry","Byleth","Min Min","Steve","Sephiroth","Pyra & Mythra","Kazuya","Sora"]},
+    "Street Fighter": {cls:"sf", maps:null,
+      chars:["Ryu","Ken","Chun-Li","Guile","Luke","Jamie","Kimberly","Juri","Cammy","Dee Jay","Manon","Marisa","JP","Zangief","Lily","Dhalsim","E. Honda","Blanka","Rashid","A.K.I.","Ed","Akuma","M. Bison","Terry","Mai","Elena"]},
   };
   const gameInfo = g => GAMES[g] || GAMES["Smash Bros"];
 
-  const P = (name, us, them) => ({name, us, them});
+  const P = (name, us, them, char) => ({name, char: char || "", us, them});
   // Shown only while there are no real matches. Never saved.
   const EXAMPLES = [
     {id:"ex1",game:"Smash Bros",date:"2026-10-14",opponent:"Westfield High",event:"PlayVS Week 4",status:"final",rounds:[
@@ -377,6 +383,9 @@ dialog.editor{width:min(760px,calc(100vw - 24px))}
       {map:"",players:[P("Sam",2,1),P("Jordan",2,0),P("Riley",1,2)]},
       {map:"",players:[P("Sam",2,0),P("Jordan",1,2),P("Riley",2,1)]}]},
   ];
+
+  const EX_CHARS = {Kerem:"Ness", Dani:"Captain Falcon", Alex:"Joker", Sam:"Ryu", Jordan:"Chun-Li", Riley:"Juri"};
+  EXAMPLES.forEach(m => m.rounds.forEach(r => r.players.forEach(p => p.char = EX_CHARS[p.name] || "")));
 
   let matches = [], loaded = false, filter = "", shown = PAGE;
 
@@ -421,7 +430,7 @@ dialog.editor{width:min(760px,calc(100vw - 24px))}
     const g = gameInfo(m.game), s = roundsWon(m), live = isLive(m);
     const r = resultOf(m), label = r==="W" ? "Win" : r==="L" ? "Loss" : "Draw";
     const img = safeUrl(m.image);
-    const roster = [...new Set((m.rounds||[]).flatMap(x => x.players.map(p => p.name)).filter(Boolean))].join(" · ");
+    const roster = [...new Set((m.rounds||[]).flatMap(x => x.players.map(p => p.char)).filter(Boolean))].join(" · ");
     const example = String(m.id).startsWith("ex");
     const tag = example ? "article" : "button";
     const rows = (m.rounds||[]).map((rd, i) => {
@@ -490,8 +499,8 @@ dialog.editor{width:min(760px,calc(100vw - 24px))}
   const startDlg = $("#startDlg");
   function lastRoster(game){
     const prev = matches.filter(m => m.game === game && m.rounds && m.rounds.length).sort(byDate)[0];
-    const names = prev ? prev.rounds[0].players.map(p => p.name) : [];
-    return Array.from({length: Math.max(PLAYERS_PER_ROUND, names.length)}, (_, i) => P(names[i] || "", 0, 0));
+    const last = prev ? prev.rounds[0].players : [];
+    return Array.from({length: Math.max(PLAYERS_PER_ROUND, last.length)}, (_, i) => P(last[i]?.name || "", 0, 0, last[i]?.char));
   }
   $("#addBtn").addEventListener("click", () => {
     if (!filter) return;
@@ -524,6 +533,7 @@ dialog.editor{width:min(760px,calc(100vw - 24px))}
     if (!cur.rounds || !cur.rounds.length) cur.rounds = [{map:"", players: lastRoster(cur.game)}];
     dirty = false; setSave("All changes saved");
     fillLists();
+    $("#charList").innerHTML = (gameInfo(cur.game).chars || []).map(c => `<option value="${esc(c)}">`).join("");
     $("#eOpp").value = cur.opponent; $("#eEvent").value = cur.event || ""; $("#eDate").value = cur.date;
     $("#delBtn").classList.remove("armed"); $("#delBtn").textContent = "Delete";
     drawRounds(); updateSummary();
@@ -551,9 +561,12 @@ dialog.editor{width:min(760px,calc(100vw - 24px))}
           <span class="rsum"><span class="n" data-sum="${i}"></span><span class="rchip" data-chip="${i}"></span>${last?`<button type="button" class="rdel" data-delround="${i}">Remove</button>`:""}</span>
         </div>
         <div class="pgrid">
-          <div class="prow cols"><span>Player</span><span class="us">Us</span><span>Them</span><span></span></div>
+          <div class="prow cols"><span>Player · Character</span><span class="us">Us</span><span>Them</span><span></span></div>
           ${rd.players.map((p, j) => `<div class="prow">
-            <input class="pname" data-r="${i}" data-p="${j}" value="${esc(p.name)}" placeholder="Player ${j+1}" list="playerList" aria-label="Round ${i+1} player ${j+1} name">
+            <div class="pwho">
+              <input class="pname" data-r="${i}" data-p="${j}" value="${esc(p.name)}" placeholder="Player ${j+1}" list="playerList" aria-label="Round ${i+1} player ${j+1} name">
+              <input class="pname pchar" data-r="${i}" data-p="${j}" value="${esc(p.char || "")}" placeholder="Character" list="charList" aria-label="Round ${i+1} player ${j+1} character">
+            </div>
             ${stepper(i, j, "us", p.us)}${stepper(i, j, "them", p.them)}
             <button type="button" class="prm" data-rmr="${i}" data-rmp="${j}" aria-label="Remove player">×</button>
           </div>`).join("")}
@@ -634,7 +647,7 @@ dialog.editor{width:min(760px,calc(100vw - 24px))}
       const rd = cur.rounds[+add.dataset.addp];
       if (rd.players.length >= 6) return toast("Up to 6 players per round", true);
       rd.players.push(P("", 0, 0)); drawRounds(); updateSummary(); changed();
-      const inputs = document.querySelectorAll(`.pname[data-r="${add.dataset.addp}"]`); inputs[inputs.length-1]?.focus();
+      const inputs = document.querySelectorAll(`.pname:not(.pchar)[data-r="${add.dataset.addp}"]`); inputs[inputs.length-1]?.focus();
       return;
     }
     const dr = e.target.closest("[data-delround]");
@@ -647,7 +660,7 @@ dialog.editor{width:min(760px,calc(100vw - 24px))}
   });
   $("#rounds").addEventListener("input", e => {
     const t = e.target;
-    if (t.classList.contains("pname")){ cur.rounds[+t.dataset.r].players[+t.dataset.p].name = t.value.slice(0, 40); changed(); }
+    if (t.classList.contains("pname")){ cur.rounds[+t.dataset.r].players[+t.dataset.p][t.classList.contains("pchar") ? "char" : "name"] = t.value.slice(0, 40); changed(); }
   });
   $("#rounds").addEventListener("change", e => {
     const t = e.target;
@@ -656,7 +669,7 @@ dialog.editor{width:min(760px,calc(100vw - 24px))}
 
   $("#nextRound").addEventListener("click", () => {
     const prev = cur.rounds[cur.rounds.length - 1];
-    cur.rounds.push({map: "", players: prev.players.map(p => P(p.name, 0, 0))});
+    cur.rounds.push({map: "", players: prev.players.map(p => P(p.name, 0, 0, p.char))});
     drawRounds(); updateSummary(); changed();
     document.querySelector(`.round[data-r="${cur.rounds.length-1}"]`)?.scrollIntoView({behavior:"smooth", block:"start"});
   });
