@@ -367,11 +367,11 @@ dialog.editor{width:min(760px,calc(100vw - 24px))}
   // Shown only while there are no real matches. Never saved.
   const EXAMPLES = [
     {id:"ex1",game:"Smash Bros",date:"2026-10-14",opponent:"Westfield High",event:"PlayVS Week 4",status:"final",rounds:[
-      {map:"Battlefield",players:[P("Kerem",3,1),P("Dani",2,3),P("Alex",3,2)]},
-      {map:"Final Destination",players:[P("Kerem",1,3),P("Dani",2,3),P("Alex",3,2)]},
-      {map:"Smashville",players:[P("Kerem",2,3),P("Dani",1,3),P("Alex",3,1)]}]},
+      {map:"Battlefield",players:[P("Kerem",3,1),P("Dani",3,2),P("Alex",3,2)]},
+      {map:"Final Destination",players:[P("Kerem",1,3),P("Dani",2,3),P("Alex",3,3)]},
+      {map:"Smashville",players:[P("Kerem",2,3),P("Dani",1,3),P("Alex",3,3)]}]},
     {id:"ex2",game:"Smash Bros",date:"2026-10-16",opponent:"North Ridge High",event:"PlayVS Week 5",status:"live",rounds:[
-      {map:"Small Battlefield",players:[P("Kerem",3,0),P("Dani",3,2),P("Alex",2,3)]},
+      {map:"Small Battlefield",players:[P("Kerem",3,0),P("Dani",3,2),P("Alex",3,3)]},
       {map:"Kalos Pokémon League",players:[P("Kerem",2,1),P("Dani",0,0),P("Alex",0,0)]}]},
     {id:"ex3",game:"Street Fighter",date:"2026-10-12",opponent:"Lakeview Academy",event:"Scrim",status:"final",rounds:[
       {map:"",players:[P("Sam",2,1),P("Jordan",2,0),P("Riley",1,2)]},
@@ -381,8 +381,14 @@ dialog.editor{width:min(760px,calc(100vw - 24px))}
   let matches = [], loaded = false, filter = "", shown = PAGE;
 
   const sum = (r, k) => (r.players || []).reduce((s, p) => s + (p[k] || 0), 0);
-  const roundResult = r => { const a = sum(r,"us"), b = sum(r,"them"); return a > b ? "W" : b > a ? "L" : ""; };
-  const roundsWon = m => { const rs = m.rounds || []; return {us: rs.filter(r => roundResult(r) === "W").length, them: rs.filter(r => roundResult(r) === "L").length}; };
+  // Smash rounds are won by the first side to take 9 stocks; until then the round is undecided.
+  const STOCKS_TO_WIN = 9;
+  const roundResult = (r, game) => {
+    const a = sum(r,"us"), b = sum(r,"them");
+    if (game === "Smash Bros") return a >= STOCKS_TO_WIN ? "W" : b >= STOCKS_TO_WIN ? "L" : "";
+    return a > b ? "W" : b > a ? "L" : "";
+  };
+  const roundsWon = m => { const rs = m.rounds || []; return {us: rs.filter(r => roundResult(r, m.game) === "W").length, them: rs.filter(r => roundResult(r, m.game) === "L").length}; };
   // A match is decided once one side has won 2 rounds; until then the card shows no result.
   const isLive = m => { const s = roundsWon(m); return s.us < 2 && s.them < 2; };
   const resultOf = m => { const s = roundsWon(m); return s.us > s.them ? "W" : s.us < s.them ? "L" : "D"; };
@@ -419,7 +425,7 @@ dialog.editor{width:min(760px,calc(100vw - 24px))}
     const example = String(m.id).startsWith("ex");
     const tag = example ? "article" : "button";
     const rows = (m.rounds||[]).map((rd, i) => {
-      const rr = roundResult(rd);
+      const rr = roundResult(rd, m.game);
       return `<div class="ritem ${rr}"><b>R${i+1}</b><span>${esc(rd.map || (g.maps ? "Map TBD" : "Round " + (i+1)))}</span><i>${sum(rd,"us")}–${sum(rd,"them")}</i></div>`;
     }).join("");
     return `<${tag} ${example?"":'type="button" '}class="match${example?"":" can-edit"}" data-id="${esc(m.id)}" aria-label="${esc(label)} against ${esc(m.opponent)}, rounds ${s.us} to ${s.them}">
@@ -564,10 +570,10 @@ dialog.editor{width:min(760px,calc(100vw - 24px))}
     $("#edOppName").textContent = cur.opponent || "Opponent";
     for (const el of document.querySelectorAll(".prow.cols span:nth-child(3)")) el.textContent = cur.opponent || "Them";
     cur.rounds.forEach((rd, i) => {
-      const rr = roundResult(rd);
+      const rr = roundResult(rd, cur.game);
       const n = document.querySelector(`[data-sum="${i}"]`); if (n) n.textContent = `${sum(rd,"us")} – ${sum(rd,"them")}`;
       const c = document.querySelector(`[data-chip="${i}"]`);
-      if (c){ c.className = "rchip " + rr; c.textContent = rr === "W" ? "Won" : rr === "L" ? "Lost" : "Even"; }
+      if (c){ c.className = "rchip " + rr; c.textContent = rr === "W" ? "Won" : rr === "L" ? "Lost" : cur.game === "Smash Bros" ? `First to ${STOCKS_TO_WIN}` : "Even"; }
       rd.players.forEach((p, j) => {
         for (const side of ["us","them"]){
           const el = document.querySelector(`.step[data-r="${i}"][data-p="${j}"][data-side="${side}"]`);
@@ -616,8 +622,9 @@ dialog.editor{width:min(760px,calc(100vw - 24px))}
     const stepBtn = e.target.closest(".step button");
     if (stepBtn){
       const box = stepBtn.parentElement, r = +box.dataset.r, p = +box.dataset.p, side = box.dataset.side;
-      const pl = cur.rounds[r].players[p];
-      pl[side] = Math.max(0, Math.min(99, pl[side] + (+stepBtn.dataset.d)));
+      const rd = cur.rounds[r], pl = rd.players[p], d = +stepBtn.dataset.d;
+      if (d > 0 && cur.game === "Smash Bros" && sum(rd, side) >= STOCKS_TO_WIN) return toast(`A round ends at ${STOCKS_TO_WIN} stocks`, true);
+      pl[side] = Math.max(0, Math.min(99, pl[side] + d));
       updateSummary(); changed(); return;
     }
     const rm = e.target.closest("[data-rmr]");

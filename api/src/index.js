@@ -21,8 +21,11 @@ const num = (v) => { const n = parseInt(v, 10); return Number.isInteger(n) ? Mat
 const safeUrl = (u) => (/^https:\/\/[^\s"'<>()]+$/i.test(u || "") ? u : "");
 const GAMES = ["Smash Bros", "Street Fighter"];
 
-function roundWinner(r) {
+// Smash rounds go to the first side to take 9 stocks; other games go to whoever is ahead.
+const STOCKS_TO_WIN = 9;
+function roundWinner(r, game) {
   const us = r.players.reduce((s, p) => s + p.us, 0), them = r.players.reduce((s, p) => s + p.them, 0);
+  if (game === "Smash Bros") return us >= STOCKS_TO_WIN ? "W" : them >= STOCKS_TO_WIN ? "L" : "";
   return us > them ? "W" : them > us ? "L" : "";
 }
 
@@ -34,15 +37,16 @@ function clean(m) {
       name: str(p && p.name, 40), us: num(p && p.us), them: num(p && p.them),
     })),
   }));
+  const game = GAMES.includes(m.game) ? m.game : "";
   const out = {
-    game: GAMES.includes(m.game) ? m.game : "",
+    game,
     date: /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : "",
     opponent: str(m.opponent, 60),
     event: str(m.event, 60),
     status: m.status === "final" ? "final" : "live",
     rounds,
-    us: rounds.filter((r) => roundWinner(r) === "W").length,
-    them: rounds.filter((r) => roundWinner(r) === "L").length,
+    us: rounds.filter((r) => roundWinner(r, game) === "W").length,
+    them: rounds.filter((r) => roundWinner(r, game) === "L").length,
     image: safeUrl(str(m.image, 500)),
   };
   if (!out.game) return { error: "Pick Smash Bros or Street Fighter." };
