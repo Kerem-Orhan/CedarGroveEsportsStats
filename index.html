@@ -246,7 +246,6 @@ dialog.editor{width:min(760px,calc(100vw - 24px))}
 .nextround:hover{color:var(--ink);border-color:var(--y)}
 .ed-foot{position:sticky;bottom:0;display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:14px 24px;border-top:1px solid var(--line);background:var(--card)}
 .ed-foot .spacer{flex:1}
-.btn.ready{background:var(--y)}
 .lede{color:var(--muted);font-size:14px;margin:0}
 
 @media (max-width:560px){
@@ -326,7 +325,6 @@ dialog.editor{width:min(760px,calc(100vw - 24px))}
     <div class="ed-body">
       <div class="ed-top">
         <span class="gamepill" id="edGame"></span>
-        <span class="state" id="edState"></span>
         <span class="savestate" id="saveState" role="status"></span>
       </div>
       <div class="ed-board">
@@ -345,8 +343,7 @@ dialog.editor{width:min(760px,calc(100vw - 24px))}
     <div class="ed-foot">
       <button class="btn danger" type="button" id="delBtn">Delete</button>
       <span class="spacer"></span>
-      <button class="btn ghost" type="button" id="edClose">Close</button>
-      <button class="btn" type="button" id="finishBtn">Finish match</button>
+      <button class="btn" type="button" id="saveBtn">Save</button>
     </div>
   </div>
 </dialog>
@@ -392,14 +389,11 @@ dialog.editor{width:min(760px,calc(100vw - 24px))}
 
   const sum = (r, k) => (r.players || []).reduce((s, p) => s + (p[k] || 0), 0);
   const roundResult = r => { const a = sum(r,"us"), b = sum(r,"them"); return a > b ? "W" : b > a ? "L" : ""; };
-  // While a match is live, its latest round is still being played and doesn't count yet.
-  const isCurrent = (m, i) => m.status === "live" && i === (m.rounds || []).length - 1;
-  const roundsWon = (m, includeCurrent) => {
-    const rs = (m.rounds || []).filter((r, i) => includeCurrent || !isCurrent(m, i));
-    return {us: rs.filter(r => roundResult(r) === "W").length, them: rs.filter(r => roundResult(r) === "L").length};
-  };
+  const roundsWon = m => { const rs = m.rounds || []; return {us: rs.filter(r => roundResult(r) === "W").length, them: rs.filter(r => roundResult(r) === "L").length}; };
+  // A match is over once one side has won 2 rounds; until then it shows as live.
+  const isLive = m => { const s = roundsWon(m); return s.us < 2 && s.them < 2; };
   const resultOf = m => { const s = roundsWon(m); return s.us > s.them ? "W" : s.us < s.them ? "L" : "D"; };
-  const byDate = (a,b) => ((b.status === "live") - (a.status === "live")) || (b.date||"").localeCompare(a.date||"") || (b.createdAt||0) - (a.createdAt||0);
+  const byDate = (a,b) => (isLive(b) - isLive(a)) || (b.date||"").localeCompare(a.date||"") || (b.createdAt||0) - (a.createdAt||0);
   const fmtDate = d => { if(!d) return ""; const t = new Date(d+"T12:00:00"); return isNaN(t) ? d : t.toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"}); };
   const today = () => { const d = new Date(); return new Date(d - d.getTimezoneOffset()*60000).toISOString().slice(0,10); };
   const safeUrl = u => /^https:\/\/[^\s"'<>()]+$/i.test(u||"") ? u : "";
@@ -425,14 +419,14 @@ dialog.editor{width:min(760px,calc(100vw - 24px))}
 
   // ---------- cards
   function card(m){
-    const g = gameInfo(m.game), s = roundsWon(m), live = m.status === "live";
+    const g = gameInfo(m.game), s = roundsWon(m), live = isLive(m);
     const r = resultOf(m), label = live ? "Live" : r==="W" ? "Win" : r==="L" ? "Loss" : "Draw";
     const img = safeUrl(m.image);
     const roster = [...new Set((m.rounds||[]).flatMap(x => x.players.map(p => p.name)).filter(Boolean))].join(" · ");
     const example = String(m.id).startsWith("ex");
     const tag = example ? "article" : "button";
     const rows = (m.rounds||[]).map((rd, i) => {
-      const rr = isCurrent(m, i) ? "cur" : roundResult(rd);
+      const rr = live && i === m.rounds.length - 1 ? "cur" : roundResult(rd);
       return `<div class="ritem ${rr}"><b>R${i+1}</b><span>${esc(rd.map || (g.maps ? "Map TBD" : "Round " + (i+1)))}</span><i>${sum(rd,"us")}–${sum(rd,"them")}</i></div>`;
     }).join("");
     return `<${tag} ${example?"":'type="button" '}class="match${example?"":" can-edit"}" data-id="${esc(m.id)}" aria-label="${esc(label)} against ${esc(m.opponent)}, rounds ${s.us} to ${s.them}">
@@ -460,7 +454,7 @@ dialog.editor{width:min(760px,calc(100vw - 24px))}
     $("#addBtn").hidden = !filter;
     $("#addBtn").textContent = filter ? `+ New ${filter} match` : "+ New match";
 
-    const done = src.filter(m => m.status !== "live");
+    const done = src.filter(m => !isLive(m));
     const W = done.filter(m=>resultOf(m)==="W").length, L = done.filter(m=>resultOf(m)==="L").length;
     $("#record").innerHTML = done.length
       ? `<span>${esc(filter || "All games")}</span><b><span class="w">${W}</span>–${L}</b><span>Record</span>`
@@ -571,9 +565,8 @@ dialog.editor{width:min(760px,calc(100vw - 24px))}
   }
 
   function updateSummary(){
-    const s = roundsWon(cur), live = cur.status === "live";
+    const s = roundsWon(cur);
     $("#edGame").textContent = cur.game;
-    const st = $("#edState"); st.className = "state " + (live ? "live" : "final"); st.textContent = live ? "Live" : "Final";
     $("#edScore").innerHTML = `${s.us}<span>:</span>${s.them}`;
     $("#edOppName").textContent = cur.opponent || "Opponent";
     for (const el of document.querySelectorAll(".prow.cols span:nth-child(3)")) el.textContent = cur.opponent || "Them";
@@ -581,7 +574,7 @@ dialog.editor{width:min(760px,calc(100vw - 24px))}
       const rr = roundResult(rd);
       const n = document.querySelector(`[data-sum="${i}"]`); if (n) n.textContent = `${sum(rd,"us")} – ${sum(rd,"them")}`;
       const c = document.querySelector(`[data-chip="${i}"]`);
-      if (c){ const now = isCurrent(cur, i); c.className = "rchip " + (now ? "cur" : rr); c.textContent = now ? "Playing" : rr === "W" ? "Won" : rr === "L" ? "Lost" : "Even"; }
+      if (c){ c.className = "rchip " + rr; c.textContent = rr === "W" ? "Won" : rr === "L" ? "Lost" : "Even"; }
       rd.players.forEach((p, j) => {
         for (const side of ["us","them"]){
           const el = document.querySelector(`.step[data-r="${i}"][data-p="${j}"][data-side="${side}"]`);
@@ -592,18 +585,13 @@ dialog.editor{width:min(760px,calc(100vw - 24px))}
       });
     });
     // Next round: round 2 any time, round 3 only when it's 1–1.
-    const nr = $("#nextRound"), n = cur.rounds.length, all = roundsWon(cur, true);
-    const canNext = live && (n === 1 || (n === 2 && all.us === 1 && all.them === 1));
+    const nr = $("#nextRound"), n = cur.rounds.length;
+    const canNext = n === 1 || (n === 2 && s.us === 1 && s.them === 1);
     nr.hidden = !canNext; nr.textContent = `+ Start round ${n + 1}`;
-    const fin = $("#finishBtn");
-    if (live){
-      const decided = all.us >= 2 || all.them >= 2;
-      fin.textContent = decided ? `Finish match · ${all.us > all.them ? "Won" : "Lost"} ${all.us}–${all.them}` : "Finish match";
-      fin.classList.toggle("ready", decided);
-    } else { fin.textContent = "Reopen match"; fin.classList.remove("ready"); }
   }
 
   function changed(){
+    cur.status = isLive(cur) ? "live" : "final";
     dirty = true; setSave("Saving…");
     const i = matches.findIndex(m => m.id === cur.id);
     if (i >= 0){ matches[i] = clone(cur); render(); }
@@ -677,15 +665,16 @@ dialog.editor{width:min(760px,calc(100vw - 24px))}
     $(id).addEventListener("input", e => { cur[key] = e.target.value; updateSummary(); changed(); });
   }
 
-  $("#finishBtn").addEventListener("click", async () => {
-    const finishing = cur.status === "live";
-    cur.status = finishing ? "final" : "live";
-    updateSummary(); changed(); await flush();
-    if (finishing){ edDlg.close(); toast("Match finished"); }
+  // Save and exit; the match can be reopened from its card any time.
+  $("#saveBtn").addEventListener("click", async () => {
+    const b = $("#saveBtn"); b.disabled = true; b.textContent = "Saving…";
+    await flush();
+    b.disabled = false; b.textContent = "Save";
+    if (dirty) return;  // save failed; the status line says why
+    edDlg.close(); toast("Saved");
   });
 
   function closeEditor(){ edDlg.close(); }
-  $("#edClose").addEventListener("click", closeEditor);
   edDlg.addEventListener("click", e => { if (e.target === edDlg) closeEditor(); });
   edDlg.addEventListener("close", () => { flush().then(() => { if (!edDlg.open) cur = null; }); });
 
