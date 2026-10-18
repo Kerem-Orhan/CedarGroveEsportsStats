@@ -1,15 +1,14 @@
 # Cedar Grove Esports Stats
 
-A match log for the Cedar Grove esports team. Log every scrim, league and tournament game, and the overview shows:
+Match results for the Cedar Grove High School esports team (Smash Bros and Street Fighter).
 
-- Overall record, win rate, current streak and score difference
-- Form over the last 10 matches
-- **Why we lose**: the reasons tagged on losses, most common first
-- Win/loss by map, opponent, match type and starting side
-- Full searchable history with edit and delete
+- Switch between **All**, **Smash Bros** and **Street Fighter** at the top
+- **Recent** shows each match as a card: final score, win/loss, players, and the character matchup
+- **+ Add match** to log a result; click any card to edit or delete it
+- Add a picture to a card by pasting an image link (https://…)
 
 ## Using it
 
-Open `index.html` in a browser, or turn on GitHub Pages (Settings → Pages → Deploy from branch → `main` / root) and use the link it gives you.
+Turn on GitHub Pages (Settings → Pages → Deploy from a branch → `main` / root) and open the link it gives you.
 
-Matches are saved in the browser you enter them in. To share the log, use **Export JSON** on the History tab and have teammates use **Import JSON**. Importing merges matches and never deletes any.
+Matches are saved in the browser you enter them in. To share them, use **Export matches** at the bottom of the page and have teammates use **Import matches**.
