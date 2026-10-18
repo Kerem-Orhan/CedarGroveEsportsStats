@@ -170,10 +170,7 @@ dialog::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(3px)}
 }
 @media (prefers-reduced-motion: reduce){ .match,.games button,.games button::after,.btn{transition:none} .match.can-edit:hover{transform:none} }
 
-/* ---------- live badge + round list on cards */
-.result .LIVE{color:var(--y);border:1px solid rgba(245,196,0,.5)}
-.result .LIVE::before{animation:pulse 1.4s ease-in-out infinite}
-@keyframes pulse{50%{opacity:.25}}
+/* ---------- round list on cards */
 .rlist{position:relative;width:100%;display:grid;gap:4px;padding:12px 16px 14px}
 .ritem{display:grid;grid-template-columns:28px minmax(0,1fr) auto 14px;align-items:center;gap:8px;font-size:12px;color:rgba(243,243,241,.82)}
 .ritem b{font-family:var(--display);font-weight:700;font-size:11px;letter-spacing:.1em;color:rgba(243,243,241,.55)}
@@ -182,7 +179,6 @@ dialog::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(3px)}
 .ritem::after{content:"";width:8px;height:8px;justify-self:end;border:1px solid rgba(255,255,255,.4)}
 .ritem.W::after{background:var(--y);border-color:var(--y)}
 .ritem.L::after{background:rgba(255,255,255,.25);border-color:transparent}
-.ritem.cur::after{border-color:var(--y);animation:pulse 1.4s ease-in-out infinite}
 .rlist .pending{font-family:var(--display);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:rgba(243,243,241,.6)}
 
 /* ---------- match editor */
@@ -192,7 +188,6 @@ dialog.editor{width:min(760px,calc(100vw - 24px))}
 .ed-top{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
 .ed-top .state{font-family:var(--display);font-weight:700;font-size:11px;letter-spacing:.24em;text-transform:uppercase;display:inline-flex;align-items:center;gap:7px}
 .ed-top .state::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
-.ed-top .state.live{color:var(--y)} .ed-top .state.live::before{animation:pulse 1.4s ease-in-out infinite}
 .ed-top .state.final{color:var(--muted)}
 .savestate{margin-left:auto;font-size:12px;color:var(--muted)}
 .savestate.bad{color:#ff6a6a}
@@ -221,7 +216,6 @@ dialog.editor{width:min(760px,calc(100vw - 24px))}
 .rchip{font-family:var(--display);font-weight:700;font-size:10px;letter-spacing:.22em;text-transform:uppercase;padding:3px 8px;border:1px solid var(--line-2);color:var(--muted)}
 .rchip.W{background:var(--ink);color:var(--on-light);border-color:var(--ink)}
 .rchip.L{color:var(--ink)}
-.rchip.cur{color:var(--y);border-color:rgba(245,196,0,.5)}
 .rdel{background:none;border:0;color:var(--muted);cursor:pointer;font-size:12px;text-decoration:underline;text-underline-offset:3px;padding:0}
 .rdel:hover{color:#ff6a6a}
 
@@ -260,7 +254,6 @@ dialog.editor{width:min(760px,calc(100vw - 24px))}
   .step output{min-width:30px;font-size:18px}
   .rsum{margin-left:0;width:100%;justify-content:space-between}
 }
-@media (prefers-reduced-motion: reduce){ .result .LIVE::before,.ed-top .state.live::before{animation:none} }
 </style>
 </head>
 <body>
@@ -319,7 +312,7 @@ dialog.editor{width:min(760px,calc(100vw - 24px))}
   </form>
 </dialog>
 
-<!-- live match editor -->
+<!-- match editor -->
 <dialog id="edDlg" class="editor">
   <div class="ed">
     <div class="ed-body">
@@ -390,10 +383,10 @@ dialog.editor{width:min(760px,calc(100vw - 24px))}
   const sum = (r, k) => (r.players || []).reduce((s, p) => s + (p[k] || 0), 0);
   const roundResult = r => { const a = sum(r,"us"), b = sum(r,"them"); return a > b ? "W" : b > a ? "L" : ""; };
   const roundsWon = m => { const rs = m.rounds || []; return {us: rs.filter(r => roundResult(r) === "W").length, them: rs.filter(r => roundResult(r) === "L").length}; };
-  // A match is over once one side has won 2 rounds; until then it shows as live.
+  // A match is decided once one side has won 2 rounds; until then the card shows no result.
   const isLive = m => { const s = roundsWon(m); return s.us < 2 && s.them < 2; };
   const resultOf = m => { const s = roundsWon(m); return s.us > s.them ? "W" : s.us < s.them ? "L" : "D"; };
-  const byDate = (a,b) => (isLive(b) - isLive(a)) || (b.date||"").localeCompare(a.date||"") || (b.createdAt||0) - (a.createdAt||0);
+  const byDate = (a,b) => (b.date||"").localeCompare(a.date||"") || (b.createdAt||0) - (a.createdAt||0);
   const fmtDate = d => { if(!d) return ""; const t = new Date(d+"T12:00:00"); return isNaN(t) ? d : t.toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"}); };
   const today = () => { const d = new Date(); return new Date(d - d.getTimezoneOffset()*60000).toISOString().slice(0,10); };
   const safeUrl = u => /^https:\/\/[^\s"'<>()]+$/i.test(u||"") ? u : "";
@@ -420,13 +413,13 @@ dialog.editor{width:min(760px,calc(100vw - 24px))}
   // ---------- cards
   function card(m){
     const g = gameInfo(m.game), s = roundsWon(m), live = isLive(m);
-    const r = resultOf(m), label = live ? "Live" : r==="W" ? "Win" : r==="L" ? "Loss" : "Draw";
+    const r = resultOf(m), label = r==="W" ? "Win" : r==="L" ? "Loss" : "Draw";
     const img = safeUrl(m.image);
     const roster = [...new Set((m.rounds||[]).flatMap(x => x.players.map(p => p.name)).filter(Boolean))].join(" · ");
     const example = String(m.id).startsWith("ex");
     const tag = example ? "article" : "button";
     const rows = (m.rounds||[]).map((rd, i) => {
-      const rr = live && i === m.rounds.length - 1 ? "cur" : roundResult(rd);
+      const rr = roundResult(rd);
       return `<div class="ritem ${rr}"><b>R${i+1}</b><span>${esc(rd.map || (g.maps ? "Map TBD" : "Round " + (i+1)))}</span><i>${sum(rd,"us")}–${sum(rd,"them")}</i></div>`;
     }).join("");
     return `<${tag} ${example?"":'type="button" '}class="match${example?"":" can-edit"}" data-id="${esc(m.id)}" aria-label="${esc(label)} against ${esc(m.opponent)}, rounds ${s.us} to ${s.them}">
@@ -436,7 +429,7 @@ dialog.editor{width:min(760px,calc(100vw - 24px))}
         <div class="score"><span class="${!live&&s.us<s.them?"dim":""}">${s.us}</span><span class="sep">:</span><span class="${!live&&s.them<s.us?"dim":""}">${s.them}</span></div>
         <div class="team them"><div class="name">${esc(m.opponent)}</div></div>
       </div>
-      <div class="result"><span class="${live?"LIVE":r}">${label}</span></div>
+      ${live ? "" : `<div class="result"><span class="${r}">${label}</span></div>`}
       <div class="banner ${g.cls}">
         <div class="bg"></div>
         ${img?`<img src="${esc(img)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">`:""}
@@ -516,7 +509,7 @@ dialog.editor{width:min(760px,calc(100vw - 24px))}
     finally{ btn.disabled = false; btn.textContent = "Start match"; }
   });
 
-  // ---------- live editor
+  // ---------- match editor
   const edDlg = $("#edDlg");
   let cur = null, saveTimer = null, saving = false, dirty = false;
 
@@ -697,13 +690,13 @@ dialog.editor{width:min(760px,calc(100vw - 24px))}
     const m = matches.find(x => x.id === c.dataset.id); if (m) openEditor(m);
   });
 
-  // ---------- load + keep live scores fresh for visitors
+  // ---------- load + keep scores fresh for visitors
   async function load(){
     const data = await api("");
     matches = Array.isArray(data) ? data : [];
   }
   setInterval(async () => {
-    if (document.hidden || edDlg.open || startDlg.open || !matches.some(m => m.status === "live")) return;
+    if (document.hidden || edDlg.open || startDlg.open || !matches.some(isLive)) return;
     try{ await load(); render(); }catch(e){}
   }, 20000);
 

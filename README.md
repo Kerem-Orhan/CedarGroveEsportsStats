@@ -4,7 +4,7 @@ Public match results for the Cedar Grove High School esports team (Smash Bros an
 
 Anyone can open the site to see results. To log a match, pick **Smash Bros** or **Street Fighter** at the top and press **+ New match** (no sign-in for now).
 
-Each match has up to 3 rounds. In each round you pick the map (Smash) and record, for each of our players, what they took vs. what their opponent took. Press **Save** to exit, and click the match card to come back to it later. A match shows as **LIVE** until one side has won 2 rounds; live matches refresh for visitors every 20 seconds.
+Each match has up to 3 rounds. In each round you pick the map (Smash) and record, for each of our players, what they took vs. what their opponent took. Press **Save** to exit, and click the match card to come back to it later. A match shows WIN or LOSS once one side has won 2 rounds. The page refreshes unfinished matches for visitors every 20 seconds.
 
 ## Turning the site on
 
