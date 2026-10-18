@@ -1,9 +1,10 @@
 // Match results API for the Cedar Grove Esports site.
 // GET /matches lists every match; POST adds one; PUT /matches/:id edits; DELETE /matches/:id removes.
-// Open to anyone for now: no sign-in.
+// A match has up to 3 rounds; each round has a map and a few player lines (what our player took vs. theirs).
+// Matches are saved while in progress ("live") and marked "final" when done. Open to anyone for now.
 
 const MAX_MATCHES = 2000;
-const MAX_BODY = 4096;
+const MAX_BODY = 8192;
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -16,27 +17,37 @@ const json = (body, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json", ...CORS } });
 
 const str = (v, n) => String(v ?? "").trim().slice(0, n);
+const num = (v) => { const n = parseInt(v, 10); return Number.isInteger(n) ? Math.min(99, Math.max(0, n)) : 0; };
 const safeUrl = (u) => (/^https:\/\/[^\s"'<>()]+$/i.test(u || "") ? u : "");
 const GAMES = ["Smash Bros", "Street Fighter"];
 
+function roundWinner(r) {
+  const us = r.players.reduce((s, p) => s + p.us, 0), them = r.players.reduce((s, p) => s + p.them, 0);
+  return us > them ? "W" : them > us ? "L" : "";
+}
+
 function clean(m) {
-  const us = parseInt(m.us, 10), them = parseInt(m.them, 10);
   const date = str(m.date, 10);
+  const rounds = (Array.isArray(m.rounds) ? m.rounds : []).slice(0, 3).map((r) => ({
+    map: str(r && r.map, 40),
+    players: (Array.isArray(r && r.players) ? r.players : []).slice(0, 6).map((p) => ({
+      name: str(p && p.name, 40), us: num(p && p.us), them: num(p && p.them),
+    })),
+  }));
   const out = {
     game: GAMES.includes(m.game) ? m.game : "",
     date: /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : "",
     opponent: str(m.opponent, 60),
     event: str(m.event, 60),
-    us, them,
-    player: str(m.player, 40), char: str(m.char, 40),
-    oppPlayer: str(m.oppPlayer, 40), oppChar: str(m.oppChar, 40),
+    status: m.status === "final" ? "final" : "live",
+    rounds,
+    us: rounds.filter((r) => roundWinner(r) === "W").length,
+    them: rounds.filter((r) => roundWinner(r) === "L").length,
     image: safeUrl(str(m.image, 500)),
   };
   if (!out.game) return { error: "Pick Smash Bros or Street Fighter." };
   if (!out.date) return { error: "Add a valid date." };
   if (!out.opponent) return { error: "Add the opponent's name." };
-  if (!Number.isInteger(us) || !Number.isInteger(them) || us < 0 || them < 0 || us > 99 || them > 99)
-    return { error: "Scores must be whole numbers from 0 to 99." };
   return { match: out };
 }
 
