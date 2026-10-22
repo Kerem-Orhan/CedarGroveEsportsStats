@@ -165,7 +165,8 @@ dialog::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(3px)}
   .head h2{font-size:38px}
   .score{font-size:40px}
   .games{width:100%;justify-content:space-between}
-  .games button{padding:8px 6px;font-size:13px}
+  .games{flex-wrap:nowrap;overflow-x:auto}
+  .games button{padding:8px 6px;font-size:12px;letter-spacing:.08em;white-space:nowrap}
   .games button::after{left:6px;right:6px}
 }
 @media (prefers-reduced-motion: reduce){ .match,.games button,.games button::after,.btn{transition:none} .match.can-edit:hover{transform:none} }
@@ -258,6 +259,97 @@ dialog.editor{width:min(760px,calc(100vw - 24px))}
   .step output{min-width:30px;font-size:18px}
   .rsum{margin-left:0;width:100%;justify-content:space-between}
 }
+
+/* ---------- shared stat tiles + tables */
+.muted{color:var(--muted)}
+.pos{color:var(--y)} .neg{color:#ff7b7b}
+.tile{background:var(--card);border:1px solid var(--line);padding:14px 16px;display:grid;gap:4px;min-width:0}
+.tile span{font-family:var(--display);font-weight:600;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
+.tile b{font-family:var(--display);font-weight:800;font-size:24px;line-height:1.1;letter-spacing:.02em;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.tile small{font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+.tile.hero{border-color:rgba(245,196,0,.45);background:linear-gradient(135deg,rgba(245,196,0,.10),transparent 60%),var(--card)}
+.tile.hero span{color:var(--y)}
+.tablewrap{overflow-x:auto}
+table.lb{width:100%;border-collapse:collapse;font-size:14px}
+table.lb th{font-family:var(--display);font-weight:600;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);text-align:left;padding:10px;border-bottom:1px solid var(--line);white-space:nowrap}
+table.lb td{padding:11px 10px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums;vertical-align:middle}
+table.lb .num{text-align:right}
+table.lb tbody tr:last-child td{border-bottom:0}
+.lbrow{cursor:pointer;transition:background .12s}
+.lbrow:hover,.lbrow:focus-visible{background:var(--card-2);outline:none}
+.rank{font-family:var(--display);font-weight:800;color:var(--muted);width:36px}
+.lbrow:first-child .rank{color:var(--y)}
+.pn{display:block;font-family:var(--display);font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.pm{display:block;font-size:12px;color:var(--muted)}
+.mapbar{display:grid;grid-template-columns:minmax(0,11rem) minmax(0,1fr) auto;gap:12px;align-items:center;font-size:13px;padding:6px 0}
+.mapbar .mn{font-family:var(--display);font-weight:600;letter-spacing:.06em;text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mapbar .track{height:8px;background:var(--line);overflow:hidden}
+.mapbar .track i{display:block;height:100%;background:var(--y)}
+.mapbar .mv{font-family:var(--display);font-weight:700;font-variant-numeric:tabular-nums;color:var(--muted);white-space:nowrap}
+
+/* ---------- players page */
+.seg{display:inline-flex;border:1px solid var(--line-2)}
+.seg button{border:0;background:transparent;color:var(--muted);padding:9px 16px;cursor:pointer;font-family:var(--display);font-weight:600;font-size:12px;letter-spacing:.16em;text-transform:uppercase}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--on-light)}
+.hl{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:14px;margin-bottom:22px}
+.pl-grid{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:20px;align-items:start}
+.panel{background:var(--card);border:1px solid var(--line);padding:18px;min-width:0}
+.panel h3,.pcols h4,#playerBody h4{margin:0;font-family:var(--display);font-weight:800;font-size:14px;letter-spacing:.2em;text-transform:uppercase}
+.panel-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.panel-head input{background:var(--bg);border:1px solid var(--line);padding:8px 10px;min-width:0;width:min(100%,14rem);border-radius:0}
+.panel-head input:focus{outline:none;border-color:var(--y)}
+.panel > h3{margin-bottom:12px}
+
+/* ---------- match display + player dialogs */
+dialog.wide{width:min(1040px,calc(100vw - 24px))}
+.vhead{position:relative;overflow:hidden;border-bottom:1px solid var(--line)}
+.vhead .bg{position:absolute;inset:0;opacity:.35}
+.vhead.smash .bg{background:url("images/smash-ultimate.webp") center 30%/cover no-repeat}
+.vhead.sf .bg{background:radial-gradient(rgba(255,255,255,.14) 1.2px,transparent 1.4px) 0 0/9px 9px}
+.vhead .shade{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(19,19,22,.55),var(--card))}
+.vhead-in{position:relative;padding:22px 24px 18px;display:grid;gap:10px}
+.vhead .meta{padding:0}
+.vhead .result{padding:0}
+.vnote{margin:0;text-align:center;font-family:var(--display);font-weight:600;font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--muted)}
+.vstats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;padding:18px 24px 0}
+.vstats.six{grid-template-columns:repeat(6,minmax(0,1fr));padding:0}
+.vrounds{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:14px;padding:18px 24px 22px}
+.vround{border:1px solid var(--line);background:var(--bg);min-width:0}
+.vround header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;padding:12px 14px;background:var(--card-2);border-bottom:1px solid var(--line)}
+.vround header > div:first-child{display:grid;gap:2px}
+.vmap{font-family:var(--display);font-weight:600;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.vround .rsum{margin-left:0}
+.vtable{width:100%;border-collapse:collapse;font-size:13px}
+.vtable th{font-family:var(--display);font-weight:600;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);text-align:left;padding:8px 12px}
+.vtable td{padding:8px 12px;border-top:1px solid var(--line);font-variant-numeric:tabular-nums}
+.vtable .num{text-align:right;font-family:var(--display);font-weight:700}
+.vtable tr.won td:first-child{box-shadow:inset 3px 0 0 var(--y)}
+.vtable tr.lost td.num:nth-child(3){color:var(--muted)}
+.vtable tr.won td.num:nth-child(3){color:var(--y)}
+.vtable tfoot td{font-family:var(--display);font-weight:700;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);border-top:1px solid var(--line-2)}
+.plink{background:none;border:0;padding:0;color:var(--ink);font-weight:700;cursor:pointer;text-decoration:underline;text-decoration-color:var(--line-2);text-underline-offset:3px}
+.plink:hover{text-decoration-color:var(--y)}
+.v-foot{display:flex;gap:10px;justify-content:flex-end;padding:14px 24px;border-top:1px solid var(--line);position:sticky;bottom:0;background:var(--card)}
+#playerBody{display:grid;gap:20px;padding:24px}
+.ph h3{margin:0;font-family:var(--display);font-weight:800;font-size:34px;line-height:1;text-transform:uppercase;letter-spacing:.04em}
+.ph .lede{margin-top:6px}
+.pcols{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:20px}
+.pcols section,#playerBody > section{display:grid;gap:10px;align-content:start}
+.bestm{display:grid;gap:4px;text-align:left;background:var(--bg);border:1px solid var(--line);padding:14px;cursor:pointer;color:var(--ink)}
+.bestm:hover{border-color:rgba(245,196,0,.55)}
+.bestm b{font-family:var(--display);font-weight:800;font-size:18px;text-transform:uppercase;letter-spacing:.04em}
+.bestm span{font-size:12px;color:var(--muted)}
+.bestm em{font-style:normal;font-family:var(--display);font-weight:700;color:var(--y)}
+footer .linkbtn{font-size:12px}
+
+@media (max-width:760px){
+  .pl-grid,.pcols{grid-template-columns:minmax(0,1fr)}
+  .vstats,.vstats.six{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .vhead-in,.vrounds,.vstats{padding-left:16px;padding-right:16px}
+  .vstats.six{padding:0}
+  #playerBody{padding:18px 16px}
+  .v-foot{padding:12px 16px}
+}
 </style>
 </head>
 <body>
@@ -272,11 +364,13 @@ dialog.editor{width:min(760px,calc(100vw - 24px))}
       <button type="button" data-game="" aria-pressed="true">All</button>
       <button type="button" data-game="Smash Bros" aria-pressed="false">Smash Bros</button>
       <button type="button" data-game="Street Fighter" aria-pressed="false">Street Fighter</button>
+      <button type="button" data-view="players" aria-pressed="false">Players</button>
     </nav>
   </div>
 </header>
 
 <main class="wrap">
+ <section id="matchesView">
   <div class="head">
     <div>
       <p class="eyebrow">Match results</p>
@@ -287,12 +381,35 @@ dialog.editor{width:min(760px,calc(100vw - 24px))}
   </div>
   <div class="grid" id="grid"></div>
   <div class="more"><button class="btn ghost" type="button" id="moreBtn" hidden>Show more</button></div>
+ </section>
+
+ <section id="playersView" hidden>
+  <div class="head">
+    <div>
+      <p class="eyebrow">Player stats</p>
+      <h2>Players</h2>
+      <p class="record" id="pSub"></p>
+    </div>
+    <div class="seg" id="pGame" role="group" aria-label="Game">
+      <button type="button" data-g="Smash Bros" aria-pressed="true">Smash Bros</button>
+      <button type="button" data-g="Street Fighter" aria-pressed="false">Street Fighter</button>
+    </div>
+  </div>
+  <div class="hl" id="highlights"></div>
+  <div class="pl-grid">
+    <div class="panel">
+      <div class="panel-head"><h3>Leaderboard</h3><input id="pSearch" type="search" placeholder="Search by name" aria-label="Search players by name"></div>
+      <div class="tablewrap"><table class="lb" id="lb"></table></div>
+    </div>
+    <div class="panel"><h3>Map record</h3><div id="mapStats"></div></div>
+  </div>
+ </section>
 </main>
 
 <footer>
   <div class="wrap">
     <span class="brand">Cedar Grove <span>Esports</span></span>
-    <span>Cedar Grove High School</span>
+    <button class="linkbtn" type="button" id="ownerBtn">Owner sign-in</button>
   </div>
 </footer>
 
@@ -344,6 +461,36 @@ dialog.editor{width:min(760px,calc(100vw - 24px))}
   </div>
 </dialog>
 
+<!-- match display -->
+<dialog id="viewDlg" class="wide">
+  <div id="viewBody"></div>
+  <div class="v-foot">
+    <button class="btn ghost" type="button" id="viewEdit" hidden>Edit</button>
+    <button class="btn" type="button" id="viewClose">Close</button>
+  </div>
+</dialog>
+
+<!-- player stats -->
+<dialog id="playerDlg" class="wide">
+  <div id="playerBody"></div>
+  <div class="v-foot"><button class="btn" type="button" id="playerClose">Close</button></div>
+</dialog>
+
+<!-- owner sign-in -->
+<dialog id="ownerDlg">
+  <form class="dlg" id="ownerForm" autocomplete="off">
+    <h3>Owner sign-in</h3>
+    <p class="lede">Only the owner can add, edit or delete matches. Everyone else can view.</p>
+    <label class="field full"><span>Owner key</span><input id="oKey" type="password" required></label>
+    <div class="err" id="ownerErr" role="alert"></div>
+    <div class="dlg-actions">
+      <span class="spacer"></span>
+      <button class="btn ghost" type="button" id="ownerCancel">Cancel</button>
+      <button class="btn" type="submit" id="ownerSubmit">Sign in</button>
+    </div>
+  </form>
+</dialog>
+
 <datalist id="oppList"></datalist><datalist id="eventList"></datalist><datalist id="playerList"></datalist><datalist id="charList"></datalist>
 
 <script>
@@ -352,7 +499,9 @@ dialog.editor{width:min(760px,calc(100vw - 24px))}
   const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
   // Match results live in a Cloudflare database behind this API (source in api/).
-  const API = "https://cedargrove-esports-api.playex.workers.dev/matches";
+  const API_BASE = "https://cedargrove-esports-api.playex.workers.dev";
+  const API = API_BASE + "/matches";
+  const OWNER_KEY = "cg-owner-key";
   const TAB_KEY = "cg-tab";
   const PAGE = 12;
   const PLAYERS_PER_ROUND = 3;
@@ -371,6 +520,8 @@ dialog.editor{width:min(760px,calc(100vw - 24px))}
   const P = (name, us, them, char) => ({name, char: char || "", us, them});
 
   let matches = [], loaded = false, filter = "", shown = PAGE;
+  let owner = false, ownerKey = "";
+  try{ ownerKey = localStorage.getItem(OWNER_KEY) || ""; }catch(e){}
 
   const sum = (r, k) => (r.players || []).reduce((s, p) => s + (p[k] || 0), 0);
   // Smash rounds are won by the first side to take 9 stocks; until then the round is undecided.
@@ -401,9 +552,13 @@ dialog.editor{width:min(760px,calc(100vw - 24px))}
   async function api(path, method, body){
     let r;
     try{
-      r = await fetch(API + path, {method: method || "GET", headers: body ? {"Content-Type":"application/json"} : undefined, body: body ? JSON.stringify(body) : undefined, cache:"no-store"});
+      const headers = {};
+      if (body) headers["Content-Type"] = "application/json";
+      if (method && method !== "GET" && ownerKey) headers["Authorization"] = "Bearer " + ownerKey;
+      r = await fetch(API + path, {method: method || "GET", headers, body: body ? JSON.stringify(body) : undefined, cache:"no-store"});
     }catch(e){ throw new Error("Couldn't reach the server. Check your connection."); }
     const data = await r.json().catch(() => ({}));
+    if (r.status === 401){ signOut(); throw new Error("Only the owner can change matches. Sign in again."); }
     if (!r.ok) throw new Error(data.error || "Something went wrong. Try again.");
     return data;
   }
@@ -413,7 +568,7 @@ dialog.editor{width:min(760px,calc(100vw - 24px))}
     const g = gameInfo(m.game), s = roundsWon(m), live = isLive(m);
     const r = resultOf(m), label = r==="W" ? "Win" : r==="L" ? "Loss" : "Draw";
     const img = safeUrl(m.image);
-    const roster = [...new Set((m.rounds||[]).flatMap(x => x.players.map(p => p.char)).filter(Boolean))].join(" · ");
+    const roster = [...new Set((m.rounds||[]).flatMap(x => x.players.map(p => normChar(p.char, m.game))).filter(Boolean))].join(" · ");
     const rows = (m.rounds||[]).map((rd, i) => {
       const rr = roundResult(rd, m.game);
       return `<div class="ritem ${rr}"><b>R${i+1}</b><span>${esc(rd.map || (g.maps ? "Map TBD" : "Round " + (i+1)))}</span><i>${sum(rd,"us")}–${sum(rd,"them")}</i></div>`;
@@ -438,7 +593,7 @@ dialog.editor{width:min(760px,calc(100vw - 24px))}
   function render(){
     if (!loaded) return;
     const src = matches.filter(m => !filter || m.game === filter).sort(byDate);
-    $("#addBtn").hidden = !filter;
+    $("#addBtn").hidden = !filter || !owner;
     $("#addBtn").textContent = filter ? `+ New ${filter} match` : "+ New match";
 
     const done = src.filter(m => !isLive(m));
@@ -449,19 +604,19 @@ dialog.editor{width:min(760px,calc(100vw - 24px))}
 
     $("#grid").innerHTML = src.length
       ? src.slice(0, shown).map(card).join("")
-      : `<div class="empty"><h3>No ${esc(filter)} matches yet</h3><p>${filter ? "Press + New match to log one." : "Pick Smash Bros or Street Fighter above, then press + New match."}</p></div>`;
+      : `<div class="empty"><h3>No ${esc(filter)} matches yet</h3><p>${!owner ? "Results will show up here once they're posted." : filter ? "Press + New match to log one." : "Pick Smash Bros or Street Fighter above, then press + New match."}</p></div>`;
     $("#moreBtn").hidden = src.length <= shown;
   }
 
   // ---------- tabs
   function setTab(g){
     filter = g; shown = PAGE;
-    for (const x of $("#gameTabs").querySelectorAll("button")) x.setAttribute("aria-pressed", String(x.dataset.game === g));
   }
   $("#gameTabs").addEventListener("click", e => {
-    const b = e.target.closest("button[data-game]"); if (!b) return;
-    setTab(b.dataset.game);
-    try{ localStorage.setItem(TAB_KEY, filter); }catch(e){}
+    const b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.view === "players"){ setView("players"); try{ localStorage.setItem(TAB_KEY, "players"); }catch(err){} return; }
+    setTab(b.dataset.game); setView("matches");
+    try{ localStorage.setItem(TAB_KEY, filter); }catch(err){}
     render();
   });
   $("#moreBtn").addEventListener("click", () => { shown += PAGE; render(); });
@@ -482,7 +637,7 @@ dialog.editor{width:min(760px,calc(100vw - 24px))}
     return Array.from({length: Math.max(PLAYERS_PER_ROUND, last.length)}, (_, i) => P(last[i]?.name || "", 0, 0, last[i]?.char));
   }
   $("#addBtn").addEventListener("click", () => {
-    if (!filter) return;
+    if (!filter || !owner) return;
     fillLists();
     $("#startTitle").textContent = `New ${filter} match`;
     $("#sOpp").value = ""; $("#sEvent").value = ""; $("#sDate").value = today(); $("#startErr").textContent = "";
@@ -685,9 +840,239 @@ dialog.editor{width:min(760px,calc(100vw - 24px))}
   });
 
   $("#grid").addEventListener("click", e => {
-    const c = e.target.closest(".match.can-edit"); if (!c) return;
-    const m = matches.find(x => x.id === c.dataset.id); if (m) openEditor(m);
+    const c = e.target.closest(".match"); if (!c) return;
+    const m = matches.find(x => x.id === c.dataset.id); if (m) openView(m);
   });
+
+  // ---------- shared helpers for the display screens
+  const unit = game => game === "Smash Bros" ? "stocks" : "points";
+  const signed = n => (n > 0 ? "+" : "") + n;
+  const pct = (a, b) => b ? Math.round(a / b * 100) + "%" : "–";
+  const nameKey = n => String(n || "").trim().toUpperCase();
+  const normChar = (c, game) => {
+    const t = String(c || "").trim(); if (!t) return "";
+    return (gameInfo(game).chars || []).find(x => x.toLowerCase() === t.toLowerCase()) || t;
+  };
+
+  // ---------- match display screen
+  const viewDlg = $("#viewDlg");
+  let viewing = null;
+
+  function openView(m){
+    viewing = m;
+    const g = gameInfo(m.game), s = roundsWon(m), live = isLive(m), r = resultOf(m), u = unit(m.game);
+    const label = r==="W" ? "Win" : r==="L" ? "Loss" : "Draw";
+    // per-player totals for this match
+    const per = new Map();
+    let taken = 0, lost = 0;
+    (m.rounds||[]).forEach(rd => rd.players.forEach(p => {
+      taken += p.us; lost += p.them;
+      const k = nameKey(p.name); if (!k) return;
+      const e = per.get(k) || {name: p.name.trim(), chars: new Set(), us: 0, them: 0};
+      e.us += p.us; e.them += p.them; if (p.char) e.chars.add(normChar(p.char, m.game)); per.set(k, e);
+    }));
+    const ranked = [...per.values()].sort((a,b) => (b.us-b.them) - (a.us-a.them) || b.us - a.us);
+    const top = ranked[0];
+
+    const rounds = (m.rounds||[]).map((rd, i) => {
+      const rr = roundResult(rd, m.game), a = sum(rd,"us"), b = sum(rd,"them");
+      const chip = rr === "W" ? "Won" : rr === "L" ? "Lost" : m.game === "Smash Bros" ? `First to ${STOCKS_TO_WIN}` : "Even";
+      return `<section class="vround">
+        <header><div><span class="rlabel">Round ${i+1}</span>${rd.map?`<span class="vmap">${esc(rd.map)}</span>`:""}</div>
+          <div class="rsum"><span class="n">${a} – ${b}</span><span class="rchip ${rr}">${chip}</span></div></header>
+        <table class="vtable"><thead><tr><th>Player</th><th>Character</th><th class="num">Took</th><th class="num">Lost</th></tr></thead><tbody>
+        ${rd.players.map(p => `<tr class="${p.us > p.them ? "won" : p.us < p.them ? "lost" : ""}">
+          <td>${p.name.trim() ? `<button type="button" class="plink" data-player="${esc(nameKey(p.name))}" data-game="${esc(m.game)}">${esc(p.name.trim())}</button>` : `<span class="muted">—</span>`}</td>
+          <td>${esc(normChar(p.char, m.game) || "—")}</td><td class="num">${p.us}</td><td class="num">${p.them}</td></tr>`).join("")}
+        </tbody><tfoot><tr><td colspan="2">Total</td><td class="num">${a}</td><td class="num">${b}</td></tr></tfoot></table>
+      </section>`;
+    }).join("");
+
+    $("#viewBody").innerHTML = `
+      <div class="vhead ${g.cls}">
+        <div class="bg"></div><div class="shade"></div>
+        <div class="vhead-in">
+          <div class="meta"><span class="gamepill">${esc(m.game)}</span><span class="event">${esc(m.event||"")}</span><span class="date">${esc(fmtDate(m.date))}</span></div>
+          <div class="ed-board">
+            <div class="tn"><small>Home</small>Cedar Grove</div>
+            <div class="big">${s.us}<span>:</span>${s.them}</div>
+            <div class="tn r"><small>Away</small>${esc(m.opponent)}</div>
+          </div>
+          ${live ? `<p class="vnote">Match not finished yet</p>` : `<div class="result"><span class="${r}">${label}</span></div>`}
+        </div>
+      </div>
+      <div class="vstats">
+        <div class="tile"><span>Rounds</span><b>${s.us}–${s.them}</b></div>
+        <div class="tile"><span>${u} taken</span><b>${taken}</b></div>
+        <div class="tile"><span>${u} lost</span><b>${lost}</b></div>
+        <div class="tile"><span>Top performer</span><b>${top ? esc(top.name) : "—"}</b>${top ? `<small>${esc([...top.chars].join(" · "))} · ${signed(top.us-top.them)}</small>` : ""}</div>
+      </div>
+      <div class="vrounds">${rounds || `<p class="muted">No rounds yet.</p>`}</div>`;
+    $("#viewEdit").hidden = !owner;
+    if (!viewDlg.open) viewDlg.showModal();
+  }
+  $("#viewClose").addEventListener("click", () => viewDlg.close());
+  viewDlg.addEventListener("click", e => { if (e.target === viewDlg) viewDlg.close(); });
+  $("#viewEdit").addEventListener("click", () => { const m = viewing; viewDlg.close(); if (m) openEditor(m); });
+  $("#viewBody").addEventListener("click", e => {
+    const b = e.target.closest(".plink"); if (!b) return;
+    viewDlg.close(); openPlayer(b.dataset.player, b.dataset.game);
+  });
+
+  // ---------- player stats
+  let pGame = "Smash Bros", pQuery = "";
+
+  function computeStats(game){
+    const players = new Map(), maps = new Map();
+    let bestRound = null;
+    const charCount = new Map();
+    for (const m of matches.filter(x => x.game === game)){
+      (m.rounds||[]).forEach((rd, ri) => {
+        const rr = roundResult(rd, game);
+        if (rd.map && rr){ const e = maps.get(rd.map) || {map: rd.map, W: 0, L: 0}; e[rr]++; maps.set(rd.map, e); }
+        const roundTotals = new Map();
+        for (const p of rd.players){
+          const k = nameKey(p.name); if (!k) continue;
+          const ch = normChar(p.char, game);
+          const e = players.get(k) || {key: k, name: p.name.trim(), matches: new Map(), lines: 0, W: 0, L: 0, taken: 0, lost: 0, chars: new Map()};
+          e.lines++; e.taken += p.us; e.lost += p.them;
+          if (p.us > p.them) e.W++; else if (p.us < p.them) e.L++;
+          if (ch){ const c = e.chars.get(ch) || {n: 0, taken: 0, lost: 0}; c.n++; c.taken += p.us; c.lost += p.them; e.chars.set(ch, c); charCount.set(ch, (charCount.get(ch)||0) + 1); }
+          const mm = e.matches.get(m.id) || {m, taken: 0, lost: 0, chars: new Set()};
+          mm.taken += p.us; mm.lost += p.them; if (ch) mm.chars.add(ch); e.matches.set(m.id, mm);
+          players.set(k, e);
+          const rt = roundTotals.get(k) || {name: e.name, taken: 0}; rt.taken += p.us; roundTotals.set(k, rt);
+        }
+        for (const rt of roundTotals.values())
+          if (!bestRound || rt.taken > bestRound.taken) bestRound = {...rt, m, ri, map: rd.map};
+      });
+    }
+    const list = [...players.values()].map(e => {
+      const main = [...e.chars.entries()].sort((a,b) => b[1].n - a[1].n)[0];
+      const ms = [...e.matches.values()];
+      const best = ms.slice().sort((a,b) => (b.taken-b.lost) - (a.taken-a.lost) || b.taken - a.taken)[0];
+      return {...e, main: main ? main[0] : "", diff: e.taken - e.lost, nMatches: ms.length, best, history: ms.sort((a,b) => byDate(a.m, b.m))};
+    }).sort((a,b) => b.diff - a.diff || b.taken - a.taken || a.name.localeCompare(b.name));
+    const topChar = [...charCount.entries()].sort((a,b) => b[1] - a[1])[0];
+    return {list, maps: [...maps.values()].sort((a,b) => (b.W+b.L) - (a.W+a.L)), bestRound, topChar};
+  }
+
+  function renderPlayers(){
+    const st = computeStats(pGame), u = unit(pGame);
+    for (const b of $("#pGame").querySelectorAll("button")) b.setAttribute("aria-pressed", String(b.dataset.g === pGame));
+    $("#pSub").innerHTML = st.list.length ? `<span>${esc(pGame)}</span><b>${st.list.length}</b><span>Players</span>` : `<span>${esc(pGame)}</span>`;
+
+    const top = st.list[0];
+    const mostTaken = st.list.slice().sort((a,b) => b.taken - a.taken)[0];
+    $("#highlights").innerHTML = st.list.length ? `
+      <div class="tile hero"><span>Top player</span><b>${esc(top.name)}</b><small>${esc(top.main || "")}${top.main?" · ":""}${signed(top.diff)} ${u} diff</small></div>
+      <div class="tile"><span>Most ${u} taken</span><b>${esc(mostTaken.name)}</b><small>${mostTaken.taken} ${u} in ${mostTaken.nMatches} match${mostTaken.nMatches===1?"":"es"}</small></div>
+      <div class="tile"><span>Best single round</span><b>${st.bestRound ? esc(st.bestRound.name) : "—"}</b>${st.bestRound ? `<small>${st.bestRound.taken} ${u} · R${st.bestRound.ri+1} vs ${esc(st.bestRound.m.opponent)}</small>` : ""}</div>
+      <div class="tile"><span>Most played character</span><b>${st.topChar ? esc(st.topChar[0]) : "—"}</b>${st.topChar ? `<small>${st.topChar[1]} matchups</small>` : ""}</div>` : "";
+
+    const q = pQuery.trim().toUpperCase();
+    const rows = st.list.map((p, i) => ({p, rank: i + 1})).filter(x => !q || x.p.key.includes(q) || (x.p.main||"").toUpperCase().includes(q));
+    $("#lb").innerHTML = st.list.length ? `<thead><tr><th>#</th><th>Player</th><th class="num">Matches</th><th class="num" title="Matchups won–lost">W–L</th><th class="num">Took</th><th class="num">Lost</th><th class="num">+/−</th><th class="num" title="Share of ${u} that went our way">Take %</th></tr></thead><tbody>
+      ${rows.map(({p, rank}) => `<tr class="lbrow" data-player="${esc(p.key)}" tabindex="0">
+        <td class="rank">${rank}</td>
+        <td><span class="pn">${esc(p.name)}</span>${p.main?`<span class="pm">${esc(p.main)}</span>`:""}</td>
+        <td class="num">${p.nMatches}</td><td class="num">${p.W}–${p.L}</td><td class="num">${p.taken}</td><td class="num">${p.lost}</td>
+        <td class="num ${p.diff>0?"pos":p.diff<0?"neg":""}">${signed(p.diff)}</td><td class="num">${pct(p.taken, p.taken + p.lost)}</td></tr>`).join("") || `<tr><td colspan="8" class="muted">No player matches "${esc(pQuery)}".</td></tr>`}
+      </tbody>` : `<tbody><tr><td class="muted">No ${esc(pGame)} matches yet. Player stats appear once matches are logged.</td></tr></tbody>`;
+
+    $("#mapStats").innerHTML = st.maps.length ? st.maps.map(x => `<div class="mapbar">
+        <span class="mn">${esc(x.map)}</span>
+        <span class="track"><i style="width:${x.W/(x.W+x.L)*100}%"></i></span>
+        <span class="mv">${x.W}–${x.L}</span></div>`).join("") : `<p class="muted">Map records show up once rounds are finished.</p>`;
+  }
+
+  $("#pGame").addEventListener("click", e => { const b = e.target.closest("button[data-g]"); if (!b) return; pGame = b.dataset.g; renderPlayers(); });
+  $("#pSearch").addEventListener("input", e => { pQuery = e.target.value; renderPlayers(); });
+  $("#lb").addEventListener("click", e => { const r = e.target.closest(".lbrow"); if (r) openPlayer(r.dataset.player, pGame); });
+  $("#lb").addEventListener("keydown", e => { const r = e.target.closest(".lbrow"); if (r && (e.key === "Enter" || e.key === " ")){ e.preventDefault(); openPlayer(r.dataset.player, pGame); } });
+
+  const playerDlg = $("#playerDlg");
+  function openPlayer(key, game){
+    const st = computeStats(game), list = st.list, p = list.find(x => x.key === key);
+    if (!p) return;
+    const u = unit(game), rank = list.indexOf(p) + 1;
+    const chars = [...p.chars.entries()].sort((a,b) => b[1].n - a[1].n);
+    const maxN = chars.length ? chars[0][1].n : 1;
+    $("#playerBody").innerHTML = `
+      <div class="ph">
+        <div><p class="eyebrow">${esc(game)} · Rank ${rank} of ${list.length}</p><h3>${esc(p.name)}</h3>${p.main?`<p class="lede">Main: ${esc(p.main)}</p>`:""}</div>
+      </div>
+      <div class="vstats six">
+        <div class="tile"><span>Matches</span><b>${p.nMatches}</b></div>
+        <div class="tile"><span>Matchups W–L</span><b>${p.W}–${p.L}</b></div>
+        <div class="tile"><span>${u} taken</span><b>${p.taken}</b></div>
+        <div class="tile"><span>${u} lost</span><b>${p.lost}</b></div>
+        <div class="tile"><span>+/−</span><b class="${p.diff>0?"pos":p.diff<0?"neg":""}">${signed(p.diff)}</b></div>
+        <div class="tile"><span>Take %</span><b>${pct(p.taken, p.taken + p.lost)}</b></div>
+      </div>
+      <div class="pcols">
+        <section><h4>Characters</h4>${chars.map(([c, v]) => `<div class="mapbar">
+          <span class="mn">${esc(c)}</span><span class="track"><i style="width:${v.n/maxN*100}%"></i></span><span class="mv">${v.n} · ${signed(v.taken - v.lost)}</span></div>`).join("") || `<p class="muted">No characters logged.</p>`}</section>
+        <section><h4>Best match</h4>${p.best ? `<button type="button" class="bestm" data-mid="${esc(p.best.m.id)}">
+          <b>vs ${esc(p.best.m.opponent)}</b><span>${esc(fmtDate(p.best.m.date))} · ${esc([...p.best.chars].join(" · "))}</span><em>${p.best.taken}–${p.best.lost} (${signed(p.best.taken - p.best.lost)})</em></button>` : ""}</section>
+      </div>
+      <section><h4>Match history</h4><div class="tablewrap"><table class="lb hist"><thead><tr><th>Date</th><th>Opponent</th><th>Character</th><th class="num">Took</th><th class="num">Lost</th><th class="num">+/−</th></tr></thead><tbody>
+        ${p.history.map(h => `<tr class="lbrow" data-mid="${esc(h.m.id)}" tabindex="0"><td>${esc(fmtDate(h.m.date))}</td><td>${esc(h.m.opponent)}</td><td>${esc([...h.chars].join(" · ") || "—")}</td>
+          <td class="num">${h.taken}</td><td class="num">${h.lost}</td><td class="num ${h.taken>h.lost?"pos":h.taken<h.lost?"neg":""}">${signed(h.taken - h.lost)}</td></tr>`).join("")}
+      </tbody></table></div></section>`;
+    if (!playerDlg.open) playerDlg.showModal();
+  }
+  $("#playerClose").addEventListener("click", () => playerDlg.close());
+  playerDlg.addEventListener("click", e => {
+    if (e.target === playerDlg) return playerDlg.close();
+    const r = e.target.closest("[data-mid]"); if (!r) return;
+    const m = matches.find(x => x.id === r.dataset.mid); if (m){ playerDlg.close(); openView(m); }
+  });
+
+  // ---------- views (matches / players)
+  let view = "matches";
+  function setView(v){
+    view = v;
+    $("#matchesView").hidden = v !== "matches";
+    $("#playersView").hidden = v !== "players";
+    for (const x of $("#gameTabs").querySelectorAll("button")) x.setAttribute("aria-pressed", String(v === "players" ? x.dataset.view === "players" : x.dataset.game === filter && !x.dataset.view));
+    if (v === "players") renderPlayers();
+  }
+
+  // ---------- owner sign-in (only the owner can add or edit matches)
+  const ownerDlg = $("#ownerDlg");
+  function syncOwnerUI(){
+    $("#ownerBtn").textContent = owner ? "Sign out" : "Owner sign-in";
+    render();
+  }
+  async function checkKey(key){
+    const r = await fetch(API_BASE + "/auth", {method: "POST", headers: {"Authorization": "Bearer " + key}, cache: "no-store"});
+    return r.ok;
+  }
+  function signOut(){
+    owner = false; ownerKey = "";
+    try{ localStorage.removeItem(OWNER_KEY); }catch(e){}
+    syncOwnerUI();
+  }
+  $("#ownerBtn").addEventListener("click", () => {
+    if (owner){ signOut(); toast("Signed out"); return; }
+    $("#oKey").value = ""; $("#ownerErr").textContent = "";
+    ownerDlg.showModal(); $("#oKey").focus();
+  });
+  $("#ownerCancel").addEventListener("click", () => ownerDlg.close());
+  $("#ownerForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const key = $("#oKey").value.trim(); if (!key) return;
+    const b = $("#ownerSubmit"); b.disabled = true; b.textContent = "Checking…";
+    try{
+      if (!(await checkKey(key))){ $("#ownerErr").textContent = "That owner key isn't right."; return; }
+      owner = true; ownerKey = key;
+      try{ localStorage.setItem(OWNER_KEY, key); }catch(err){}
+      ownerDlg.close(); syncOwnerUI(); toast("Signed in. You can add and edit matches.");
+    }catch(err){ $("#ownerErr").textContent = "Couldn't reach the server. Try again."; }
+    finally{ b.disabled = false; b.textContent = "Sign in"; }
+  });
+
 
   // ---------- load + keep scores fresh for visitors
   async function load(){
@@ -695,12 +1080,18 @@ dialog.editor{width:min(760px,calc(100vw - 24px))}
     matches = Array.isArray(data) ? data : [];
   }
   setInterval(async () => {
-    if (document.hidden || edDlg.open || startDlg.open || !matches.some(isLive)) return;
-    try{ await load(); render(); }catch(e){}
+    if (document.hidden || edDlg.open || startDlg.open || viewDlg.open || playerDlg.open || !matches.some(isLive)) return;
+    try{ await load(); render(); if (view === "players") renderPlayers(); }catch(e){}
   }, 20000);
 
-  try{ const t = localStorage.getItem(TAB_KEY); if (t === "" || GAMES[t]) setTab(t); }catch(e){}
+  let startView = "matches";
+  try{ const t = localStorage.getItem(TAB_KEY); if (t === "" || GAMES[t]) setTab(t); else if (t === "players") startView = "players"; }catch(e){}
+  setView(startView);
   (async () => {
+    if (ownerKey){
+      try{ owner = await checkKey(ownerKey); }catch(e){ owner = false; }
+      if (!owner) signOut(); else syncOwnerUI();
+    }
     try{ await load(); }
     catch(e){
       loaded = true;
@@ -709,6 +1100,7 @@ dialog.editor{width:min(760px,calc(100vw - 24px))}
       return;
     }
     loaded = true; render();
+    if (view === "players") renderPlayers();
   })();
 })();
 </script>

@@ -1,7 +1,8 @@
 // Match results API for the Cedar Grove Esports site.
 // GET /matches lists every match; POST adds one; PUT /matches/:id edits; DELETE /matches/:id removes.
 // A match has up to 3 rounds; each round has a map and a few player lines (what our player took vs. theirs).
-// Matches are saved while in progress ("live") and marked "final" when done. Open to anyone for now.
+// Anyone can read. Adding, editing and deleting need the owner key (Worker secret ADMIN_KEY),
+// sent as "Authorization: Bearer <key>". POST /auth checks a key without changing anything.
 
 const MAX_MATCHES = 2000;
 const MAX_BODY = 8192;
@@ -9,7 +10,7 @@ const MAX_BODY = 8192;
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
   "Access-Control-Max-Age": "86400",
 };
 
@@ -61,6 +62,16 @@ async function readBody(request) {
   try { return JSON.parse(text); } catch { return null; }
 }
 
+// Compare in constant time so the key can't be guessed from response timing.
+async function isOwner(request, env) {
+  const key = env.ADMIN_KEY;
+  const given = (request.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "");
+  if (!key || !given) return false;
+  const enc = new TextEncoder();
+  const [a, b] = await Promise.all([crypto.subtle.digest("SHA-256", enc.encode(given)), crypto.subtle.digest("SHA-256", enc.encode(key))]);
+  return crypto.subtle.timingSafeEqual(a, b);
+}
+
 const rowToMatch = (r) => ({ ...JSON.parse(r.data), id: r.id, createdAt: r.created_at });
 
 export default {
@@ -69,8 +80,15 @@ export default {
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
 
     const parts = url.pathname.split("/").filter(Boolean);
+
+    if (parts.length === 1 && parts[0] === "auth" && request.method === "POST")
+      return (await isOwner(request, env)) ? json({ ok: true }) : json({ error: "That owner key isn't right." }, 401);
+
     if (parts[0] !== "matches" || parts.length > 2) return json({ error: "Not found" }, 404);
     const id = parts[1];
+
+    if (request.method !== "GET" && !(await isOwner(request, env)))
+      return json({ error: "Only the team owner can add or change matches." }, 401);
 
     try {
       if (request.method === "GET" && !id) {
